@@ -24,6 +24,8 @@ public class WhatsappApiApplication {
 //        var contato = new Contact(Jid.of(558186189045l));
 //        whatsappFuture.get().sendMessage(contato , "Procure a recepção e mostre a mensagem a qualquer recepcionista que vai ser lhe entregue a marcação.)");
 //        //whatsappFuture.get().logout();
+
+        System.out.println("Test Commit");
     }
 
 
