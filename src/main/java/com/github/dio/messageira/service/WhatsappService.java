@@ -1,5 +1,7 @@
 package com.github.dio.messageira.service;
 
+import com.github.dio.messageira.controller.modeloRepresentacional.PacienteMR;
+import com.github.dio.messageira.model.Paciente;
 import it.auties.whatsapp.api.QrHandler;
 import it.auties.whatsapp.api.Whatsapp;
 import it.auties.whatsapp.model.button.base.*;
@@ -61,8 +63,23 @@ public class WhatsappService {
         enviandoMensagemTexto(numero, mensagem);
     }
 
+
+    public void enviarMensagemLista(List<String> numeros, String mensagem) {
+
+        numeros.forEach(s ->  {
+            try {
+                Thread.sleep(3000);
+                enviarMensagem(s , mensagem);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+
     public void enviarMensagemComBotao(String numero, String mensagem) {
         enviandoMensagemComBotao(numero);
+
     }
 
 

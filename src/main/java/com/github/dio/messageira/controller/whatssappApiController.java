@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/zap")
 public class whatssappApiController {
@@ -22,12 +24,17 @@ public class whatssappApiController {
 
 
     @PostMapping("/enviar")
-    public void enviar(@RequestBody PacienteMR pacienteMD)   {
-        service.enviarMensagem(pacienteMD.getNumero() , pacienteMD.getMensagem().getTexto());
+    public void enviar(@RequestBody PacienteMR pacienteMD) {
+        service.enviarMensagem(pacienteMD.getNumero(), "");
     }
 
     @PostMapping("/enviarBotao")
-    public void enviarComBotao (@RequestBody PacienteMR pacienteMR) {
-        service.enviarMensagemComBotao(pacienteMR.getNumero() , null);
+    public void enviarComBotao(@RequestBody PacienteMR pacienteMR) {
+        service.enviarMensagemComBotao(pacienteMR.getNumero(), null);
+    }
+
+    @PostMapping("/enviarList")
+    public void enviarParaLista(@RequestBody PacienteMR pacienteMR) {
+        service.enviarMensagemLista(pacienteMR.getNumeros(), pacienteMR.getMensagem());
     }
 }

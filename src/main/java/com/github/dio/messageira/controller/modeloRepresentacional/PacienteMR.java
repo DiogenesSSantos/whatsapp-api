@@ -4,8 +4,10 @@ import com.github.dio.messageira.model.Mensagem;
 import com.github.dio.messageira.model.Paciente;
 import lombok.Getter;
 
+import java.util.List;
+
 @Getter
 public class PacienteMR extends Paciente{
-    private Mensagem mensagem;
-
+    private List<String> numeros;
+    private String mensagem;
 }
