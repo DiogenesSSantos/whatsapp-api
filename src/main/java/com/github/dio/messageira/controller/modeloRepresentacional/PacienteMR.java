@@ -7,7 +7,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class PacienteMR extends Paciente{
+public class PacienteMR{
+    private String nome;
     private List<String> numeros;
-    private String mensagem;
 }

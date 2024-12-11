@@ -24,17 +24,13 @@ public class whatssappApiController {
 
 
     @PostMapping("/enviar")
-    public void enviar(@RequestBody PacienteMR pacienteMD) {
-        service.enviarMensagem(pacienteMD.getNumero(), "");
+    public void enviar(@RequestBody PacienteMR pacienteMD) throws InterruptedException {
+        service.enviarMensagem(pacienteMD);
     }
 
-    @PostMapping("/enviarBotao")
-    public void enviarComBotao(@RequestBody PacienteMR pacienteMR) {
-        service.enviarMensagemComBotao(pacienteMR.getNumero(), null);
-    }
 
     @PostMapping("/enviarList")
-    public void enviarParaLista(@RequestBody PacienteMR pacienteMR) {
-        service.enviarMensagemLista(pacienteMR.getNumeros(), pacienteMR.getMensagem());
+    public void enviarParaLista(@RequestBody List<PacienteMR> pacienteMR) {
+        service.enviarMensagemLista(pacienteMR);
     }
 }
