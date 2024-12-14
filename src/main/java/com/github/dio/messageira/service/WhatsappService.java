@@ -119,11 +119,12 @@ public class WhatsappService {
                 System.out.println("Enviando mensagem para: " + numero);
                 var contactJid = Jid.of(numero);
                 String mensagem =
-                        String.format( "Boa tarde somos da Secretaria de Saúde de Vitória de Santo Antão. Venho, por meio desta mensagem," +
+                        String.format( "Boa dia somos da Secretaria de Saúde de Vitória de Santo Antão. Venho, por meio desta mensagem," +
                                 " informar sobre um comprovante de agendamento para:%n%n" + "Consulta: Oftalmologista%n" + "Paciente: %s%nMotivo: CIRURGIA DE PTERÍGIO OU CATARATA.%n%n"
-                                + "Por favor, pegar este comprovante de agendamento NA SEXTA-FEIRA, dia 13/12/24 horario entre 08:00 e 15:00, na Secretaria de Saúde setor de REGULAÇÃO.%n%n"
+                                + "Por favor, pegar este comprovante de agendamento NA TERÇA FEIRA, dia 17/12/24 horario entre 12:00 e 16:00, na Secretaria de Saúde setor de REGULAÇÃO.%n%n"
                                         + "ME CONFIRME COM OK, CASO POSSUA INTERESSE.%n%n" +
-                                "OBS: E caso contrário não conheça o paciente ou o mesmo não tenha mais interesse na consulta, desconsidere esta mensagem.", nomeUsuario);
+                                "OBS: E caso contrário não conheça o paciente ou o mesmo não tenha mais interesse na consulta, desconsidere esta mensagem.%n%n%n" +
+                                "REFORÇANDO ME CONFIRME COM !!!OK!!! SE NÃO ME CONFIRMAR NÃO SERÁ MARCADO A CONSULTA%n%n PARA PEGAR DIA 17/12/24 (TERÇA FEIRA) NO HORARIO INFORMADO APARTI DAS 12:00 ATÉ 16:00 CHEGAR ANTES DA DATA INFORMADO OU HORÁRIO NÃO SERÁ ENTREGUE O COMPROVANTE.", nomeUsuario);
 
 
                 whatsapp.sendMessage(contactJid, mensagem).thenRun(() -> {
