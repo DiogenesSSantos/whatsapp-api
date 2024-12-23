@@ -17,6 +17,12 @@ public class whatssappApiController {
     private WhatsappService service;
 
 
+
+    @GetMapping("/")
+    public String home() {
+        return "index";
+    }
+
     @GetMapping("/test")
     public ResponseEntity<Object> testeString() {
         return ResponseEntity.ofNullable("TESTANDO API");
@@ -36,6 +42,7 @@ public class whatssappApiController {
 
     @PostMapping("/enviarBotao")
     public void enviarBotao(@RequestBody PacienteMR pacienteMD) throws InterruptedException {
+        System.out.println("CHAMOU O MÉTODO");
         service.enviarMensagemBotao(pacienteMD);
     }
 

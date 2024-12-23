@@ -1,6 +1,7 @@
 package com.github.dio.messageira.service;
 
 import com.github.dio.messageira.controller.modeloRepresentacional.PacienteMR;
+import com.github.dio.messageira.listener.ListenerNovaMensagem;
 import it.auties.whatsapp.api.PairingCodeHandler;
 import it.auties.whatsapp.api.QrHandler;
 import it.auties.whatsapp.api.Whatsapp;
@@ -22,10 +23,7 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 
 import javax.swing.text.html.HTMLDocument;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-import java.util.Scanner;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -33,6 +31,7 @@ public class WhatsappService {
 
     private static CompletableFuture<Whatsapp> whatsappFuture;
 
+    
 
     /**
      * INJEÇÃO DA INSTANCIA DO WHATSAPP PARA USO CONTINUO NO SERVIÇO, LOGIN FEITO POR QRCode!
@@ -42,30 +41,6 @@ public class WhatsappService {
     public void init() {
         whatsappFuture = new CompletableFuture<>();
 
-//        System.out.println("DIGITE UM NUMERO DE TELEFONE COM CODIGO DO PAÍS E DDD, OBS NUMEROS DE " +
-//                "PERNANBUCO NÃO COLOQUE O 9 A FRENTE ");
-//        var numero = new Scanner(System.in).nextLong();
-//        Whatsapp.webBuilder()
-//                .lastConnection()
-//                .unregistered(numero, PairingCodeHandler.toTerminal())
-//                .addLoggedInListener(api -> {
-//                    whatsappFuture.complete(api);
-//                    System.out.printf("CONECTADO: %s%n", api.store().privacySettings());
-//                })
-//                .addDisconnectedListener(razao -> {
-//                    whatsappFuture = new CompletableFuture<>();
-//                    System.out.println("RAZÃO DISCONEXÃO : "+ razao.toString());
-//                })
-//                .addNewChatMessageListener(mensagem-> System.out.println("NOVA MENSAGEM : " + mensagem.toJson()))
-//                .connect()
-//                .thenRun(() -> System.out.println("CONECTADO NO SEU WHATSAPP"))
-//                .exceptionally(throwable -> {
-//                    System.err.println("ERRO AO CONECTAR NO ZAP : " + throwable.getMessage());
-//                    throwable.getStackTrace();
-//                    whatsappFuture.completeExceptionally(throwable);
-//                    return null;
-//                });
-
         Whatsapp.webBuilder()
                 .lastConnection()
                 .unregistered(QrHandler.toTerminal())
@@ -73,6 +48,7 @@ public class WhatsappService {
                     whatsappFuture.complete(api);
                     System.out.printf("Connected: %s%n", api.store().privacySettings());
                 })
+//                .addListener(new ListenerNovaMensagem())
                 .addDisconnectedListener(reason -> {
                     whatsappFuture = new CompletableFuture<>();
                     System.out.printf("Disconnected: %s%n", reason);
@@ -96,7 +72,7 @@ public class WhatsappService {
 
     public void enviarMensagem(PacienteMR paciente) throws InterruptedException {
         for (int i = 0; i < paciente.getNumeros().size(); i++) {
-            enviandoMensagemTexto(paciente.getNumeros().get(i), paciente.getNome());
+            enviandoMensagemTexto("5581"+paciente.getNumeros().get(i), paciente.getNome(), paciente.getTipoConsulta());
             Thread.sleep(10000L);
         }
     } public void enviarMensagemBotao(PacienteMR paciente) throws InterruptedException {
@@ -118,13 +94,15 @@ public class WhatsappService {
     }
 
 
-    public void enviarMensagemComBotao(String numero, String mensagem) {
-        enviandoMensagemComBotao(numero);
-    }
 
 
-    private static void enviandoMensagemTexto(String numero, String nomeUsuario) {
+    private static void enviandoMensagemTexto(String numero, String nomeUsuario, String tipoConsulta) {
+
         whatsappFuture.thenAccept(whatsapp -> {
+
+            whatsapp.addListener(new ListenerNovaMensagem(whatsapp, nomeUsuario , numero));
+
+
             try {
                 if (!whatsapp.isConnected()) {
                     System.err.println("O WhatsApp não está conectado.");
@@ -135,7 +113,7 @@ public class WhatsappService {
                 String mensagem = String.format(
                         "Boa tarde! Somos da SECRETARIA DE SAÚDE DE VITÓRIA DE SANTO ANTÃO. Venho, por meio desta mensagem, " +
                                 "informar sobre um comprovante de agendamento para:%n%n" +
-                                "Consulta: OFTALMOLOGISTA%n" +
+                                "Consulta: %S.%n" +
                                 "Paciente: %s%nMotivo: CIRURGIA DE PTERÍGIO OU CATARATA.%n%n" +
                                 "Por favor, pegar este comprovante de agendamento NA TERÇA-FEIRA, dia 17/12/2024, " +
                                 "no horário entre 12:00 e 17:00, na SECRETARIA DE SAÚDE.%n%n" +
@@ -145,7 +123,7 @@ public class WhatsappService {
                                 "Para pegar no dia 17/12/24 (TERÇA-FEIRA), no horário informado, a partir das 12:00 até 17:00. " +
                                 "Caso chegue antes da data ou horário informado, terá que aguardar.%n%n" +
                                 "Agradeço a compreensão.",
-                        nomeUsuario
+                        tipoConsulta,nomeUsuario
                 );
                 whatsapp.sendMessage(contactJid, mensagem).thenRun(() -> {
                     System.out.println("Mensagem enviada para: " + numero);
@@ -173,8 +151,8 @@ public class WhatsappService {
             ButtonText buttonTextSim = new ButtonText("SIM");
             ButtonText buttonTextNao = new ButtonText("NÃO");
 
-            Button buttonSim = new Button("Sim" , Optional.of(buttonTextSim) , Optional.of(nativeFlowInfo) , ButtonBody.Type.TEXT);
-            Button buttonNao = new Button("Não" , Optional.of(buttonTextNao) , Optional.of(nativeFlowInfo) , ButtonBody.Type.TEXT);
+            Button buttonSim = new Button("Sim" , Optional.of(buttonTextSim) , Optional.of(nativeFlowInfo) , ButtonBody.Type.NATIVE_FLOW);
+            Button buttonNao = new Button("Não" , Optional.of(buttonTextNao) , Optional.of(nativeFlowInfo) , ButtonBody.Type.NATIVE_FLOW);
 
             ButtonsMessageBuilder buttonsMessageBuilder = new ButtonsMessageBuilder();
             buttonsMessageBuilder.body("SELECIONE UMA OPÇÃO ABAIXO");
@@ -195,15 +173,6 @@ public class WhatsappService {
         });
     }
 
-
-    public void capturadoMensagemUsuario() {
-        whatsappFuture.thenAccept(whatsapp -> {
-
-            // MessageIndexInfo
-
-        });
-
-    }
 
 
 }

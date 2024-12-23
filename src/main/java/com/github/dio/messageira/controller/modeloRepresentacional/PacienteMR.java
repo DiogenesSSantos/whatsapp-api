@@ -10,4 +10,5 @@ import java.util.List;
 public class PacienteMR{
     private String nome;
     private List<String> numeros;
+    private String tipoConsulta;
 }

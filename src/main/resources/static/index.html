@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Mensagens</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Painel de Mensagens</h1>
+        <div id="numeros-telefone-form">
+            <div class="input-group">
+                <label for="telefone">Número de Telefone:</label>
+                <input type="text" id="telefone" placeholder="Apenas o numero sem ddd e o 9 na frente">
+                <button type="button" id="adicionarTelefoneBtn">Adicionar Número</button>
+            </div>
+        </div>
+        <div id="telefonesAdicionados"></div>
+        <div class="input-group">
+            <label for="paciente">Nome do Paciente:</label>
+            <input type="text" id="paciente" placeholder="Nome do Paciente">
+        </div>
+        <div class="input-group">
+            <label for="tipoConsulta">Tipo de Consulta:</label>
+            <select id="tipoConsulta">
+                <option value="OFTALMOLOGISTA">OFTALMOLOGISTA</option>
+                <option value="COLONOSCOPIA">COLONOSCOPIA</option>
+                <option value="LABORATORIAIS">LABORATORIAIS</option>
+            </select>
+        </div>
+        <button id="adicionarBtn">Adicionar Usuário</button>
+        <h2>Destinatários</h2>
+        <ul id="destinatarios"></ul>
+        <div class="actions">
+            <button id="enviarBtn">Enviar Mensagem</button>
+            <a id="monitorarBtn" href="respostas.html">Monitorar Respostas</a>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
