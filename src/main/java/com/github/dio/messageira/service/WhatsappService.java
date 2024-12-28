@@ -110,7 +110,9 @@ public class WhatsappService {
                 }
                 System.out.println("Enviando mensagem para: " + numero);
                 var contactJid = Jid.of(numero);
-                String mensagem = String.format(
+
+                String mensagemTest = "Test";
+                String mensagem1 = String.format(
                         "Boa tarde! Somos da SECRETARIA DE SAÚDE DE VITÓRIA DE SANTO ANTÃO. Venho, por meio desta mensagem, " +
                                 "informar sobre um comprovante de agendamento para:%n%n" +
                                 "Consulta: %S.%n" +
@@ -125,7 +127,7 @@ public class WhatsappService {
                                 "Agradeço a compreensão.",
                         tipoConsulta,nomeUsuario
                 );
-                whatsapp.sendMessage(contactJid, mensagem).thenRun(() -> {
+                whatsapp.sendMessage(contactJid, mensagemTest).thenRun(() -> {
                     System.out.println("Mensagem enviada para: " + numero);
                 }).exceptionally(ex -> {
                     System.err.println("Erro ao enviar mensagem: " + ex.getMessage());
