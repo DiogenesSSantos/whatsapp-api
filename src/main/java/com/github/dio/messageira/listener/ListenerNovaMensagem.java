@@ -33,11 +33,12 @@ public class ListenerNovaMensagem implements Listener {
     private Boolean motivoDesistencia = false;
 
 
-    //Classes para criar os dados para salva no excel
+    //Atributos para criar os dados para salvar no excel
     private static String caminho = "C:\\Users\\Dioge\\OneDrive\\Área de Trabalho\\salvar-marcações\\marcacoes-" + LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")) + ".xlsx";
     private static org.apache.poi.ss.usermodel.Workbook workbook = null;
     public static Sheet sheet = null;
-    public static int linha = 1;
+    public static int linha = 5;
+    public static int contadorColunaNumero = 0;
     public static Set<String> nomeUsuariosUnico = new HashSet<String>();
 
     //Atributos para controlar a fila de Listener
@@ -56,6 +57,7 @@ public class ListenerNovaMensagem implements Listener {
     public void onNewMessage(Whatsapp whatsapp, MessageInfo<?> info) {
         String mensagemUsuario = null;
         String jidNumeroUsuario = info.senderJid().toSimpleJid().toPhoneNumber();
+
         if ((workbook == null) && (sheet == null)) {
             excelApi();
         }
@@ -71,8 +73,8 @@ public class ListenerNovaMensagem implements Listener {
         if (!(info.message().content() instanceof TextMessage textMessage)) {
             if (mensagemUsuario == null && jidNumeroUsuario.equals(numeroUsuario)) {
                 whatsapp.sendMessage(Jid.of(numeroUsuario), String.format("NÃO ACEITAMOS MENSAGEM DE AUDIO, FOTOS, VIDEOS OU FIGURINHAS COMO OPÇÃO.%n%n" +
-                        "(sim) caso tenha interesse na consulta.%n%n" +
-                        "(não) caso desistencia e depois digite o motivo da sua desistencia abaixo :"));
+                        "(sim) para caso tenha interesse na consulta.%n%n" +
+                        "(não) para caso desistência da consulta :"));
             }
 
             motivoDesistencia = false;
@@ -100,13 +102,13 @@ public class ListenerNovaMensagem implements Listener {
 
         if (!mensagemUsuario.equalsIgnoreCase("sim") && !mensagemUsuario.equalsIgnoreCase("nao")) {
             whatsapp.sendMessage(Jid.of(numeroUsuario), String.format("Por favor digite uma das opções:%n%n" +
-                    "(sim) caso tenha interesse na consulta.%n%n" +
-                    "(não) caso desistencia e depois digite o motivo da sua desistencia abaixo :"));
+                    "(sim) caso tenha interesse na consulta.%n%n OU %n%n" +
+                    "(não) para caso desistência da consulta."));
         }
 
 
         if (mensagemUsuario.equalsIgnoreCase("sim") || mensagemUsuario.equalsIgnoreCase("s")) {
-            whatsapp.sendMessage(Jid.of(numeroUsuario), "Está marcado, pode vim pegar no dia e horário que foi estipulado anteriomente.");
+            whatsapp.sendMessage(Jid.of(numeroUsuario), "Está marcado, pode vim pegar no dia e horário que foi estipulado anteriormente.");
             whatsapp.removeListener(this);
 
 
@@ -119,8 +121,11 @@ public class ListenerNovaMensagem implements Listener {
         }
 
 
-        if (mensagemUsuario.equalsIgnoreCase("nao")) {
-            whatsapp.sendMessage(Jid.of(numeroUsuario), "Coloque o motivo da desistencia abaixo : ");
+        if (mensagemUsuario.equalsIgnoreCase("nao")
+                || mensagemUsuario.equalsIgnoreCase("não")
+                || mensagemUsuario.equalsIgnoreCase("naõ")
+                || mensagemUsuario.equalsIgnoreCase("ñ")   ) {
+            whatsapp.sendMessage(Jid.of(numeroUsuario), "Coloque o motivo da desistência abaixo : ");
             motivoDesistencia = true;
         }
 
@@ -128,18 +133,18 @@ public class ListenerNovaMensagem implements Listener {
 
 
     private static void excelApi() throws IOException, InvalidFormatException {
-        workbook = new XSSFWorkbook();
-        sheet = workbook.createSheet("Marcações");
-        Row row = sheet.createRow(0);
+        workbook = new XSSFWorkbook("C:\\Users\\Dioge\\OneDrive\\Área de Trabalho\\arquivo-planilha-cmce\\copia-para-usar-projeto.xlsx");
+        sheet = workbook.getSheet("ESPECIALIDADES");
+        //Row row = sheet.createRow(5);
 
-        Cell cabecalhoNome = row.createCell(0);
-        cabecalhoNome.setCellValue("Nome");
-        Cell cabecalhoNumero = row.createCell(1);
-        cabecalhoNumero.setCellValue("Numero");
-        Cell cabecalhoMotivo = row.createCell(2);
-        cabecalhoMotivo.setCellValue("Motivo");
-        Cell cabecalhoStatus = row.createCell(3);
-        cabecalhoStatus.setCellValue("Status");
+//        Cell cabecalhoNome = row.createCell(0);
+//        cabecalhoNome.setCellValue("Nome");
+//        Cell cabecalhoNumero = row.createCell(1);
+//        cabecalhoNumero.setCellValue("Numero");
+//        Cell cabecalhoMotivo = row.createCell(2);
+//        cabecalhoMotivo.setCellValue("Motivo");
+//        Cell cabecalhoStatus = row.createCell(3);
+//        cabecalhoStatus.setCellValue("Status");
 
         try (FileOutputStream fileOutputStream = new FileOutputStream(caminho)) {
             workbook.write(new FileOutputStream(caminho));
@@ -160,39 +165,67 @@ public class ListenerNovaMensagem implements Listener {
 
     private static CompletableFuture<Void> persistiDados(ListenerNovaMensagem listenerNovaMensagem , String mensagemUsuario) throws IOException {
         return CompletableFuture.runAsync(() -> {
-            Row newRow = sheet.createRow(linha++);
-            int col = 0;
+            Row newRow = sheet.createRow(++linha);
 
-            Cell cell = newRow.createCell(0);
-            cell.setCellValue(listenerNovaMensagem.nomeUsuario);
+            CellStyle cellStyleParaTodos = workbook.createCellStyle();
+            Font fontParaTodos = workbook.createFont();
+            fontParaTodos.setFontName("Aptos Narrow");
+            cellStyleParaTodos.setFont(fontParaTodos);
+            cellStyleParaTodos.setBorderBottom(BorderStyle.THIN);
+            cellStyleParaTodos.setBorderRight(BorderStyle.THIN);
+            cellStyleParaTodos.setBorderLeft(BorderStyle.THIN);
+            cellStyleParaTodos.setBorderTop(BorderStyle.THIN);
 
-            Cell cell2 = newRow.createCell(1);
-            cell2.setCellValue(listenerNovaMensagem.numeroUsuario);
 
-            Cell cell3 = newRow.createCell(2);
-            CellStyle cellStyle = workbook.createCellStyle();
+
+            Cell cell0 = newRow.createCell(0);
+            cell0.setCellValue(contadorColunaNumero++);
+            cell0.setCellStyle(cellStyleParaTodos);
+
+            Cell cell1 = newRow.createCell(1);
+            cell1.setCellValue(listenerNovaMensagem.nomeUsuario);
+            cell1.setCellStyle(cellStyleParaTodos);
+
+
+            cellStyleParaTodos.setAlignment(HorizontalAlignment.CENTER);
+            Cell cell2 = newRow.createCell(2);
+            cell2.setCellValue("9"+listenerNovaMensagem.numeroUsuario.substring(5));
+            cell2.setCellStyle(cellStyleParaTodos);
+
+
+
+
+            Cell cell3 = newRow.createCell(4);
+            CellStyle cellStyleCell3 = workbook.createCellStyle();
+            cellStyleCell3.setBorderBottom(BorderStyle.THIN);
+            cellStyleCell3.setBorderRight(BorderStyle.THIN);
+            cellStyleCell3.setBorderLeft(BorderStyle.THIN);
+            cellStyleCell3.setBorderTop(BorderStyle.THIN);
             Font font = workbook.createFont();
             if (!mensagemUsuario.equalsIgnoreCase("ACEITO")) {
-                cellStyle.setFillBackgroundColor(IndexedColors.RED1.getIndex());
-                cellStyle.setFillPattern(FillPatternType.DIAMONDS);
-                //cellStyle.setAlignment(HorizontalAlignment.CENTER);
+                cellStyleCell3.setFillBackgroundColor(IndexedColors.RED1.getIndex());
+                cellStyleCell3.setFillPattern(FillPatternType.DIAMONDS);
+                cellStyleCell3.setAlignment(HorizontalAlignment.CENTER);
                 font.setColor(IndexedColors.WHITE.getIndex());
-                cellStyle.setFont(font);
-                cell3.setCellStyle(cellStyle);
+                font.setFontName("Aptos Narrow");
+                cellStyleCell3.setFont(font);
+                cell3.setCellStyle(cellStyleCell3);
 
             }else {
-                cellStyle.setFillBackgroundColor(IndexedColors.BRIGHT_GREEN1.getIndex());
-                cellStyle.setFillPattern(FillPatternType.DIAMONDS);
-                //cellStyle.setAlignment(HorizontalAlignment.CENTER);
+                cellStyleCell3.setFillBackgroundColor(IndexedColors.BRIGHT_GREEN1.getIndex());
+                cellStyleCell3.setFillPattern(FillPatternType.DIAMONDS);
+                cellStyleCell3.setAlignment(HorizontalAlignment.CENTER);
                 font.setColor(IndexedColors.BLACK.getIndex());
-                cellStyle.setFont(font);
-                cell3.setCellStyle(cellStyle);
+                font.setFontName("Aptos Narrow");
+                cellStyleCell3.setFont(font);
+                cell3.setCellStyle(cellStyleCell3);
             }
             cell3.setCellValue(mensagemUsuario);
 
 
-            Cell cabecalhoStatus = newRow.createCell(3);
-            cabecalhoStatus.setCellValue("..FALTA IMPLEMENTAR..");
+            Cell cabecalhoProcedimento= newRow.createCell(3);
+            cabecalhoProcedimento.setCellValue("OFTALMOLOGISTA");
+            cabecalhoProcedimento.setCellStyle(cellStyleParaTodos);
 
             try (FileOutputStream fileOutputStream = new FileOutputStream(caminho)) {
                 try {

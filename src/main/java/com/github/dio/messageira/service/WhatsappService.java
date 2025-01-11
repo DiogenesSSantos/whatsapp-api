@@ -43,26 +43,24 @@ public class WhatsappService {
                     whatsappFuture.complete(api);
                     System.out.printf("Connected: %s%n", api.store().privacySettings());
                 })
-//                .addListener(new ListenerNovaMensagem())
                 .addDisconnectedListener(reason -> {
                     whatsappFuture = new CompletableFuture<>();
                     System.out.printf("Disconnected: %s%n", reason);
                 })
                 .addNewChatMessageListener(message -> System.out.printf("New message: %s%n", message.toJson()))
                 .connect()
-                .thenRun(() -> System.out.println("Conectado ao WhatsApp Web!")).exceptionally(ex -> {
+                .thenRun(() -> System.out.println("Conectado ao WhatsApp Web!"))
+                .exceptionally(ex -> {
                     System.err.println("Erro ao conectar ao WhatsApp: " + ex.getMessage());
                     ex.printStackTrace();
                     whatsappFuture.completeExceptionally(ex);
                     return null;
-
                 });
 
 
 
     }
 
-    //TODO Futuramente buscar injeção de uma instancia do whatsapp pelo CODIGO SMS.
 
 
     public void enviarMensagem(PacienteMR paciente) throws InterruptedException {
@@ -70,11 +68,8 @@ public class WhatsappService {
             enviandoMensagemTexto("5581"+paciente.getNumeros().get(i), paciente.getNome(), paciente.getTipoConsulta());
             Thread.sleep(10000L);
         }
-    } public void enviarMensagemBotao(PacienteMR paciente) throws InterruptedException {
-        for (int i = 0; i < paciente.getNumeros().size(); i++) {
-            enviandoMensagemComBotao(paciente.getNumeros().get(i));
-            Thread.sleep(10000L);
-        }
+
+
     }
 
 
@@ -86,6 +81,16 @@ public class WhatsappService {
                 throw new RuntimeException(e);
             }
         });
+    }
+
+    /*
+        ESSE NÃO FUNCIONAL NO MOMENTOS, OS BOTÃOES SO FUNCIONA NO WEBAPP IGNORAR POR UM MOMENTO.
+     */
+    public void enviarMensagemBotao(PacienteMR paciente) throws InterruptedException {
+        for (int i = 0; i < paciente.getNumeros().size(); i++) {
+            enviandoMensagemComBotao(paciente.getNumeros().get(i));
+            Thread.sleep(10000L);
+        }
     }
 
 
