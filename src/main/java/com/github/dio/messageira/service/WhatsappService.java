@@ -83,9 +83,10 @@ public class WhatsappService {
         });
     }
 
-    /*
-        ESSE NÃO FUNCIONAL NO MOMENTOS, OS BOTÃOES SO FUNCIONA NO WEBAPP IGNORAR POR UM MOMENTO.
-     */
+    /**
+     *
+        ESSE MÉTODO NÃO FUNCIONAl NO MOMENTO, OS BOTÕES SÓ FUNCIONA NO WEBAPP DO WHATSAPP,  IGNORAR POR UM MOMENTO ATÉ ATUALIZAÇÃO LIB.
+     **/
     public void enviarMensagemBotao(PacienteMR paciente) throws InterruptedException {
         for (int i = 0; i < paciente.getNumeros().size(); i++) {
             enviandoMensagemComBotao(paciente.getNumeros().get(i));
@@ -99,11 +100,12 @@ public class WhatsappService {
     private static void enviandoMensagemTexto(String numero, String nomeUsuario, String tipoConsulta) {
 
         whatsappFuture.thenAccept(whatsapp -> {
-
-
                 whatsapp.addListener(new ListenerNovaMensagem(whatsapp, nomeUsuario , numero));
 
+
+                
             try {
+
                 if (!whatsapp.isConnected()) {
                     System.err.println("O WhatsApp não está conectado.");
                     return;
@@ -134,17 +136,20 @@ public class WhatsappService {
                     ex.printStackTrace();
                     return null;
                 });
+
             } catch (Exception e) {
                 System.err.println("Erro ao enviar mensagem: " + e.getMessage());
                 e.printStackTrace();
             }
+
+
         }).exceptionally(ex -> {
             System.err.println("Falha ao obter a instância do WhatsApp: " + ex.getMessage());
             return null;
         });
     }
 
-    //TODO REFATORARA ESSE METODO, AS MENSAGEM NÃO MOSTRANDO PARA MOBILE.
+    //TODO REFATORAR ESSE MÉTODO, OBS : AS MENSAGEM NÃO MOSTRANDO PARA MOBILE.
     private static void enviandoMensagemComBotao(String numero) {
         whatsappFuture.thenAccept(whatsapp -> {
 

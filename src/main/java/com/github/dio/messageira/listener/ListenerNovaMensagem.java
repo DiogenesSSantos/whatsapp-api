@@ -72,7 +72,7 @@ public class ListenerNovaMensagem implements Listener {
 
         if (!(info.message().content() instanceof TextMessage textMessage)) {
             if (mensagemUsuario == null && jidNumeroUsuario.equals(numeroUsuario)) {
-                whatsapp.sendMessage(Jid.of(numeroUsuario), String.format("NÃO ACEITAMOS MENSAGEM DE AUDIO, FOTOS, VIDEOS OU FIGURINHAS COMO OPÇÃO.%n%n" +
+                whatsapp.sendMessage(Jid.of(numeroUsuario), String.format("NÃO ACEITAMOS MENSAGEM DE ÁUDIO, FOTOS, VÍDEOS OU FIGURINHAS COMO OPÇÃO.%n%n" +
                         "(sim) para caso tenha interesse na consulta.%n%n" +
                         "(não) para caso desistência da consulta :"));
             }
@@ -135,17 +135,6 @@ public class ListenerNovaMensagem implements Listener {
     private static void excelApi() throws IOException, InvalidFormatException {
         workbook = new XSSFWorkbook("C:\\Users\\Dioge\\OneDrive\\Área de Trabalho\\arquivo-planilha-cmce\\copia-para-usar-projeto.xlsx");
         sheet = workbook.getSheet("ESPECIALIDADES");
-        //Row row = sheet.createRow(5);
-
-//        Cell cabecalhoNome = row.createCell(0);
-//        cabecalhoNome.setCellValue("Nome");
-//        Cell cabecalhoNumero = row.createCell(1);
-//        cabecalhoNumero.setCellValue("Numero");
-//        Cell cabecalhoMotivo = row.createCell(2);
-//        cabecalhoMotivo.setCellValue("Motivo");
-//        Cell cabecalhoStatus = row.createCell(3);
-//        cabecalhoStatus.setCellValue("Status");
-
         try (FileOutputStream fileOutputStream = new FileOutputStream(caminho)) {
             workbook.write(new FileOutputStream(caminho));
             workbook.close();
