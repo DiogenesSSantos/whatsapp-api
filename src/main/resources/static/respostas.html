@@ -2,18 +2,108 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitorar Respostas</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Atualização de Pacientes</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+
+          .aceito {
+            background-color: green;
+            color: white;
+        }
+        .outro-motivo {
+            background-color: red;
+            color: white;
+        }
+
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Monitorar Respostas</h1>
-        <h2>Respostas</h2>
-        <ul id="respostas"></ul>
-        <button onclick="voltar()">Voltar</button>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="respostas.js"></script>
+<h1>Atualização de Pacientes</h1>
+<table>
+    <thead>
+    <tr>
+        <th>Nome</th>
+        <th>Numero Telefone</th>
+        <th>Bairro</th>
+        <th>Procedimento</th>
+        <th>Data Consulta</th>
+        <th>Motivo</th>
+    </tr>
+    </thead>
+    <tbody id="pacienteTableBody">
+    </tbody>
+</table>
+
+<script>
+    const socket = new WebSocket('ws://localhost:8080/paciente-updates');
+
+socket.onopen = function(event) {
+   console.log("Conexão WebSocket estabelecida.");
+};
+
+socket.onmessage = function(event) {
+   console.log("Mensagem recebida: ", event.data); // Adicionado para depuração
+   const updatedData = JSON.parse(event.data);
+   const tableBody = document.getElementById('pacienteTableBody');
+   tableBody.innerHTML = '';
+
+   updatedData.forEach(paciente => {
+       const row = document.createElement('tr');
+
+       const nomeColunaCell= document.createElement('td');
+       nomeColunaCell.textContent = paciente.nome;
+       row.appendChild(nomeColunaCell);
+
+       const numeroCell = document.createElement('td');
+       numeroCell.textContent = paciente.numero;
+       row.appendChild(numeroCell);
+
+       const bairroCell = document.createElement('td');
+       bairroCell.textContent = paciente.bairro;
+       row.appendChild(bairroCell);
+
+       const consultaCell = document.createElement('td');
+       consultaCell.textContent = paciente.consulta;
+       row.appendChild(consultaCell);
+
+       const dataCell = document.createElement('td');
+       dataCell.textContent = paciente.dataConsulta;
+       row.appendChild(dataCell);
+
+       const motivoCell = document.createElement('td');
+       motivoCell.textContent = paciente.motivo;
+       row.appendChild(motivoCell);
+
+       if (paciente.motivo === "ACEITO") {
+                motivoCell.classList.add('aceito');
+            } else {
+                motivoCell.classList.add('outro-motivo');
+            }
+
+       tableBody.appendChild(row);
+   });
+};
+
+socket.onclose = function(event) {
+   console.log("Conexão WebSocket encerrada.");
+};
+
+socket.onerror = function(error) {
+   console.log("Erro no WebSocket: ", error);
+};
+</script>
 </body>
 </html>

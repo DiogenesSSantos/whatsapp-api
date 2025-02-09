@@ -1,11 +1,14 @@
 package com.github.dio.messageira.listener;
 
+import com.github.dio.messageira.controller.modeloRepresentacional.PacienteMR;
 import it.auties.whatsapp.api.Whatsapp;
 import it.auties.whatsapp.listener.Listener;
 import it.auties.whatsapp.listener.RegisterListener;
 import it.auties.whatsapp.model.info.MessageInfo;
 import it.auties.whatsapp.model.jid.Jid;
 import it.auties.whatsapp.model.message.standard.TextMessage;
+import it.auties.whatsapp.model.response.HasWhatsappResponse;
+import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.*;
@@ -17,6 +20,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -27,11 +31,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 @EnableAsync
 public class ListenerNovaMensagem implements Listener {
 
+
     private Whatsapp whatsapp;
     private String nomeUsuario;
     private String numeroUsuario;
     private Boolean motivoDesistencia = false;
-
+    private UUID uuidUnicoUsuario;
+    private PacienteMR pacienteMR;
 
     //Atributos para criar os dados para salvar no excel
     private static String caminho = "C:\\Users\\Dioge\\OneDrive\\Área de Trabalho\\salvar-marcações\\marcacoes-" + LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")) + ".xlsx";
@@ -39,17 +45,19 @@ public class ListenerNovaMensagem implements Listener {
     public static Sheet sheet = null;
     public static int linha = 5;
     public static int contadorColunaNumero = 0;
-    public static Set<String> nomeUsuariosUnico = new HashSet<String>();
+    public static Set<UUID> uuidUnicoUsuarioSet = new HashSet<UUID>();
 
     //Atributos para controlar a fila de Listener
     private static final LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<>();
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
 
 
-    public ListenerNovaMensagem(Whatsapp whatsapp, String nomeUsuario, String numeroUsuario) {
+    public ListenerNovaMensagem(Whatsapp whatsapp, PacienteMR pacienteMR , String numeroUsuario) {
         this.whatsapp = whatsapp;
-        this.nomeUsuario = nomeUsuario;
+        this.nomeUsuario = pacienteMR.getNome();
         this.numeroUsuario = "+" + numeroUsuario;
+        this.uuidUnicoUsuario = pacienteMR.getId();
+        this.pacienteMR = pacienteMR;
     }
 
     @SneakyThrows
@@ -58,9 +66,6 @@ public class ListenerNovaMensagem implements Listener {
         String mensagemUsuario = null;
         String jidNumeroUsuario = info.senderJid().toSimpleJid().toPhoneNumber();
 
-        if ((workbook == null) && (sheet == null)) {
-            excelApi();
-        }
 
         if (!jidNumeroUsuario.equals(numeroUsuario)) {
             return;
@@ -89,10 +94,10 @@ public class ListenerNovaMensagem implements Listener {
                 motivoDesistencia = false;
                 whatsapp.removeListener(this);
 
-                if (!nomeUsuariosUnico.contains(nomeUsuario)) {
-                    nomeUsuariosUnico.add(nomeUsuario);
-                    reabrirConecxao(this);
-                    executarPersistencia(this , motivo);
+                if (!uuidUnicoUsuarioSet.contains(uuidUnicoUsuario)) {
+                    uuidUnicoUsuarioSet.add(uuidUnicoUsuario);
+                    reabrirConecxao();
+                    executarPersistencia(numeroUsuario , motivo , pacienteMR);
                 }
                 return;
             }
@@ -100,7 +105,8 @@ public class ListenerNovaMensagem implements Listener {
         }
 
 
-        if (!mensagemUsuario.equalsIgnoreCase("sim") && !mensagemUsuario.equalsIgnoreCase("nao")) {
+        if (!mensagemUsuario.equalsIgnoreCase("sim") && !mensagemUsuario.equalsIgnoreCase("nao") &&
+                !mensagemUsuario.equalsIgnoreCase("Não")) {
             whatsapp.sendMessage(Jid.of(numeroUsuario), String.format("Por favor digite uma das opções:%n%n" +
                     "(sim) caso tenha interesse na consulta.%n%n OU %n%n" +
                     "(não) para caso desistência da consulta."));
@@ -108,14 +114,15 @@ public class ListenerNovaMensagem implements Listener {
 
 
         if (mensagemUsuario.equalsIgnoreCase("sim") || mensagemUsuario.equalsIgnoreCase("s")) {
-            whatsapp.sendMessage(Jid.of(numeroUsuario), "Está marcado, pode vim pegar no dia e horário que foi estipulado anteriormente.");
+            whatsapp.sendMessage(Jid.of(numeroUsuario),String.format("Está marcado, á sua consulta será no dia (%S).%n%n" +
+                    "por favor pegue seu comprovante de agendamento com antecedência.", pacienteMR.getData()));
             whatsapp.removeListener(this);
 
 
-            if (!nomeUsuariosUnico.contains(nomeUsuario)) {
-                nomeUsuariosUnico.add(nomeUsuario);
-                reabrirConecxao(this);
-                executarPersistencia(this , "ACEITO");
+            if (!uuidUnicoUsuarioSet.contains(uuidUnicoUsuario)) {
+                uuidUnicoUsuarioSet.add(uuidUnicoUsuario);
+                reabrirConecxao();
+                executarPersistencia(jidNumeroUsuario , "ACEITO" , pacienteMR);
             }
 
         }
@@ -142,7 +149,7 @@ public class ListenerNovaMensagem implements Listener {
 
     }
 
-    public static void reabrirConecxao(ListenerNovaMensagem listenerNovaMensagem) throws IOException {
+    public static void reabrirConecxao() throws IOException {
         try (FileInputStream fileInputStream = new FileInputStream(new File(caminho))) {
             workbook = new XSSFWorkbook(fileInputStream);
             sheet = workbook.getSheetAt(0);
@@ -152,7 +159,7 @@ public class ListenerNovaMensagem implements Listener {
     }
 
 
-    private static CompletableFuture<Void> persistiDados(ListenerNovaMensagem listenerNovaMensagem , String mensagemUsuario) throws IOException {
+    private static CompletableFuture<Void> persistiDados(String numeroUsuario , String mensagemUsuario ,PacienteMR pacienteMR) throws IOException {
         return CompletableFuture.runAsync(() -> {
             Row newRow = sheet.createRow(++linha);
 
@@ -164,57 +171,64 @@ public class ListenerNovaMensagem implements Listener {
             cellStyleParaTodos.setBorderRight(BorderStyle.THIN);
             cellStyleParaTodos.setBorderLeft(BorderStyle.THIN);
             cellStyleParaTodos.setBorderTop(BorderStyle.THIN);
+            cellStyleParaTodos.setAlignment(HorizontalAlignment.LEFT);
 
 
-
-            Cell cell0 = newRow.createCell(0);
-            cell0.setCellValue(contadorColunaNumero++);
-            cell0.setCellStyle(cellStyleParaTodos);
-
-            Cell cell1 = newRow.createCell(1);
-            cell1.setCellValue(listenerNovaMensagem.nomeUsuario);
-            cell1.setCellStyle(cellStyleParaTodos);
-
+            Cell celulaNomeComunitario = newRow.createCell(0);
+            celulaNomeComunitario.setCellValue(pacienteMR.getNome());
+            celulaNomeComunitario.setCellStyle(cellStyleParaTodos);
 
             cellStyleParaTodos.setAlignment(HorizontalAlignment.CENTER);
-            Cell cell2 = newRow.createCell(2);
-            cell2.setCellValue("9"+listenerNovaMensagem.numeroUsuario.substring(5));
-            cell2.setCellStyle(cellStyleParaTodos);
+            Cell celulaNumero = newRow.createCell(1);
+            celulaNumero.setCellValue("9"+numeroUsuario.substring(5));
+            celulaNumero.setCellStyle(cellStyleParaTodos);
+
+
+            Cell celulaBairro = newRow.createCell(2);
+            celulaBairro.setCellValue(pacienteMR.getBairro().toString());
+            celulaBairro.setCellStyle(cellStyleParaTodos);
 
 
 
+            Cell celulaProcedimento= newRow.createCell(3);
+            celulaProcedimento.setCellValue(pacienteMR.getConsulta().toString());
+            celulaProcedimento.setCellStyle(cellStyleParaTodos);
 
-            Cell cell3 = newRow.createCell(4);
-            CellStyle cellStyleCell3 = workbook.createCellStyle();
-            cellStyleCell3.setBorderBottom(BorderStyle.THIN);
-            cellStyleCell3.setBorderRight(BorderStyle.THIN);
-            cellStyleCell3.setBorderLeft(BorderStyle.THIN);
-            cellStyleCell3.setBorderTop(BorderStyle.THIN);
+
+            Cell celulaDataConsulta = newRow.createCell(4);
+            celulaDataConsulta.setCellValue(pacienteMR.getData());
+            celulaDataConsulta.setCellStyle(cellStyleParaTodos);
+
+
+
+            Cell cell5 = newRow.createCell(5);
+            CellStyle cellStyleCell5 = workbook.createCellStyle();
+            cellStyleCell5.setBorderBottom(BorderStyle.THIN);
+            cellStyleCell5.setBorderRight(BorderStyle.THIN);
+            cellStyleCell5.setBorderLeft(BorderStyle.THIN);
+            cellStyleCell5.setBorderTop(BorderStyle.THIN);
             Font font = workbook.createFont();
             if (!mensagemUsuario.equalsIgnoreCase("ACEITO")) {
-                cellStyleCell3.setFillBackgroundColor(IndexedColors.RED1.getIndex());
-                cellStyleCell3.setFillPattern(FillPatternType.DIAMONDS);
-                cellStyleCell3.setAlignment(HorizontalAlignment.CENTER);
+                cellStyleCell5.setFillBackgroundColor(IndexedColors.RED1.getIndex());
+                cellStyleCell5.setFillPattern(FillPatternType.DIAMONDS);
+                cellStyleCell5.setAlignment(HorizontalAlignment.CENTER);
                 font.setColor(IndexedColors.WHITE.getIndex());
                 font.setFontName("Aptos Narrow");
-                cellStyleCell3.setFont(font);
-                cell3.setCellStyle(cellStyleCell3);
+                cellStyleCell5.setFont(font);
+                cell5.setCellStyle(cellStyleCell5);
 
             }else {
-                cellStyleCell3.setFillBackgroundColor(IndexedColors.BRIGHT_GREEN1.getIndex());
-                cellStyleCell3.setFillPattern(FillPatternType.DIAMONDS);
-                cellStyleCell3.setAlignment(HorizontalAlignment.CENTER);
+                cellStyleCell5.setFillBackgroundColor(IndexedColors.BRIGHT_GREEN1.getIndex());
+                cellStyleCell5.setFillPattern(FillPatternType.DIAMONDS);
+                cellStyleCell5.setAlignment(HorizontalAlignment.CENTER);
                 font.setColor(IndexedColors.BLACK.getIndex());
                 font.setFontName("Aptos Narrow");
-                cellStyleCell3.setFont(font);
-                cell3.setCellStyle(cellStyleCell3);
+                cellStyleCell5.setFont(font);
+                cell5.setCellStyle(cellStyleCell5);
             }
-            cell3.setCellValue(mensagemUsuario);
+            cell5.setCellValue(mensagemUsuario);
 
 
-            Cell cabecalhoProcedimento= newRow.createCell(3);
-            cabecalhoProcedimento.setCellValue("OFTALMOLOGISTA");
-            cabecalhoProcedimento.setCellStyle(cellStyleParaTodos);
 
             try (FileOutputStream fileOutputStream = new FileOutputStream(caminho)) {
                 try {
@@ -235,10 +249,10 @@ public class ListenerNovaMensagem implements Listener {
 
     }
 
-    public static void executarPersistencia(ListenerNovaMensagem listenerNovaMensagem , String mensagem) {
+    public static void executarPersistencia(String numeroUsuario , String mensagem , PacienteMR pacienteMR) {
         queue.add(() -> {
             try {
-                persistiDados(listenerNovaMensagem , mensagem).get();
+                persistiDados(numeroUsuario , mensagem , pacienteMR).get();
             } catch (Exception e) {
                 e.printStackTrace();
             }

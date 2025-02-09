@@ -1,51 +1,46 @@
 package com.github.dio.messageira.service;
 
+
 import com.github.dio.messageira.controller.modeloRepresentacional.PacienteMR;
 import com.github.dio.messageira.listener.ListenerNovaMensagem;
-import it.auties.whatsapp.api.QrHandler;
 import it.auties.whatsapp.api.Whatsapp;
-import it.auties.whatsapp.model.button.base.Button;
-import it.auties.whatsapp.model.button.base.ButtonBody;
-import it.auties.whatsapp.model.button.base.ButtonText;
-import it.auties.whatsapp.model.info.NativeFlowInfo;
 import it.auties.whatsapp.model.jid.Jid;
-import it.auties.whatsapp.model.message.button.ButtonsMessageBuilder;
-import it.auties.whatsapp.model.message.button.ButtonsMessageHeader;
-import it.auties.whatsapp.model.message.button.ButtonsMessageHeaderText;
-import it.auties.whatsapp.model.message.model.MessageContainer;
-import it.auties.whatsapp.model.message.model.MessageContainerBuilder;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class WhatsappService {
 
     private static CompletableFuture<Whatsapp> whatsappFuture;
+    private String qrCode;
+    private Boolean isDisconnecting = true;
 
-    
-
-    /**
-     * INJEÇÃO DA INSTANCIA DO WHATSAPP PARA USO CONTINUO NO SERVIÇO, LOGIN FEITO POR QRCode!
-     * FUTURAMENTE INJEÇÕES COM CODIGO DE SMS
-     */
     @PostConstruct
     public void init() {
         whatsappFuture = new CompletableFuture<>();
 
+
+        System.out.println("AGORA VOU EXECUTAR A MONTAGEM DO WHASTSAPP");
         Whatsapp.webBuilder()
                 .lastConnection()
-                .unregistered(QrHandler.toTerminal())
+                .unregistered(qrCode -> {
+                    System.out.println("QRCodeRecebido");
+                    this.qrCode = qrCode;
+
+                })
                 .addLoggedInListener(api -> {
                     whatsappFuture.complete(api);
-                    System.out.printf("Connected: %s%n", api.store().privacySettings());
+                    System.out.printf("conectado: %s%n", api.store().privacySettings());
+                    isDisconnecting = false;
+
                 })
                 .addDisconnectedListener(reason -> {
                     whatsappFuture = new CompletableFuture<>();
-                    System.out.printf("Disconnected: %s%n", reason);
+                    System.out.printf("disconectado: %s%n", reason);
                 })
                 .addNewChatMessageListener(message -> System.out.printf("New message: %s%n", message.toJson()))
                 .connect()
@@ -58,14 +53,12 @@ public class WhatsappService {
                 });
 
 
-
     }
-
 
 
     public void enviarMensagem(PacienteMR paciente) throws InterruptedException {
         for (int i = 0; i < paciente.getNumeros().size(); i++) {
-            enviandoMensagemTexto("5581"+paciente.getNumeros().get(i), paciente.getNome(), paciente.getTipoConsulta());
+            enviandoMensagemTexto(paciente, "55" + paciente.getNumeros().get(i));
             Thread.sleep(10000L);
         }
 
@@ -83,27 +76,12 @@ public class WhatsappService {
         });
     }
 
-    /**
-     *
-        ESSE MÉTODO NÃO FUNCIONAl NO MOMENTO, OS BOTÕES SÓ FUNCIONA NO WEBAPP DO WHATSAPP,  IGNORAR POR UM MOMENTO ATÉ ATUALIZAÇÃO LIB.
-     **/
-    public void enviarMensagemBotao(PacienteMR paciente) throws InterruptedException {
-        for (int i = 0; i < paciente.getNumeros().size(); i++) {
-            enviandoMensagemComBotao(paciente.getNumeros().get(i));
-            Thread.sleep(10000L);
-        }
-    }
 
-
-
-
-    private static void enviandoMensagemTexto(String numero, String nomeUsuario, String tipoConsulta) {
+    private static void enviandoMensagemTexto(PacienteMR pacienteMR, String numero) {
 
         whatsappFuture.thenAccept(whatsapp -> {
-                whatsapp.addListener(new ListenerNovaMensagem(whatsapp, nomeUsuario , numero));
+            whatsapp.addListener(new ListenerNovaMensagem(whatsapp, pacienteMR, numero));
 
-
-                
             try {
 
                 if (!whatsapp.isConnected()) {
@@ -113,23 +91,19 @@ public class WhatsappService {
                 System.out.println("Enviando mensagem para: " + numero);
                 var contactJid = Jid.of(numero);
 
-                String mensagemTest = "Test";
                 String mensagem1 = String.format(
-                        "Boa tarde! Somos da SECRETARIA DE SAÚDE DE VITÓRIA DE SANTO ANTÃO. Venho, por meio desta mensagem, " +
-                                "informar sobre um comprovante de agendamento para:%n%n" +
-                                "Consulta: %S.%n" +
-                                "Paciente: %s%nMotivo: CIRURGIA DE PTERÍGIO OU CATARATA.%n%n" +
-                                "Por favor, pegar este comprovante de agendamento NA TERÇA-FEIRA, dia 17/12/2024, " +
-                                "no horário entre 12:00 e 17:00, na SECRETARIA DE SAÚDE.%n%n" +
-                                "ME CONFIRME COM OK, caso possua interesse.%n%n" +
-                                "OBS: Caso não conheça o paciente ou o mesmo não tenha mais interesse na consulta, desconsidere esta mensagem.%n%n" +
-                                "REFORÇANDO, ME CONFIRME COM !!!OK!!!. Se não me confirmar, não será marcada a consulta.%n%n" +
-                                "Para pegar no dia 17/12/24 (TERÇA-FEIRA), no horário informado, a partir das 12:00 até 17:00. " +
-                                "Caso chegue antes da data ou horário informado, terá que aguardar.%n%n" +
-                                "Agradeço a compreensão.",
-                        tipoConsulta,nomeUsuario
+                        "Bom dia! Somos da SECRETARIA DE SAÚDE DE VITÓRIA DE SANTO ANTÃO. Venho, por meio desta mensagem, informar sobre um comprovante de agendamento para:%n%n" +
+                                "Paciente: %S.%n%n" +
+                                "Consulta: %S.%n%n" +
+                                "Data da Consulta: %S.%n%n" +
+                                "Por favor, pegue este comprovante de agendamento com antecedência, no horário entre 08:00 e 14:00, na Secretaria de Saúde, setor de Regulação e Marcações.%n%n" +
+                                "Me confirme digitando (sim), caso possua interesse.%n%n" +
+                                "Caso não tenha mais interesse, digite (não) e esclareça o motivo da desistência.%n%n" +
+                                "Em último caso, se não conhecer o paciente, apenas ignore esta mensagem.%n%n" +
+                                "Agradeço a compreensão."
+                        , pacienteMR.getNome(), pacienteMR.getConsulta(), pacienteMR.getData(), pacienteMR.getData()
                 );
-                whatsapp.sendMessage(contactJid, mensagemTest).thenRun(() -> {
+                whatsapp.sendMessage(contactJid, mensagem1).thenRun(() -> {
                     System.out.println("Mensagem enviada para: " + numero);
                 }).exceptionally(ex -> {
                     System.err.println("Erro ao enviar mensagem: " + ex.getMessage());
@@ -149,37 +123,36 @@ public class WhatsappService {
         });
     }
 
-    //TODO REFATORAR ESSE MÉTODO, OBS : AS MENSAGEM NÃO MOSTRANDO PARA MOBILE.
-    private static void enviandoMensagemComBotao(String numero) {
-        whatsappFuture.thenAccept(whatsapp -> {
-
-            var numeroJid = Jid.of(numero);
-            NativeFlowInfo nativeFlowInfo = new NativeFlowInfo("Test" , "TESTE O NATIVE FLOR");
-            ButtonText buttonTextSim = new ButtonText("SIM");
-            ButtonText buttonTextNao = new ButtonText("NÃO");
-
-            Button buttonSim = new Button("Sim" , Optional.of(buttonTextSim) , Optional.of(nativeFlowInfo) , ButtonBody.Type.NATIVE_FLOW);
-            Button buttonNao = new Button("Não" , Optional.of(buttonTextNao) , Optional.of(nativeFlowInfo) , ButtonBody.Type.NATIVE_FLOW);
-
-            ButtonsMessageBuilder buttonsMessageBuilder = new ButtonsMessageBuilder();
-            buttonsMessageBuilder.body("SELECIONE UMA OPÇÃO ABAIXO");
-            buttonsMessageBuilder.headerType(ButtonsMessageHeader.Type.TEXT);
-            buttonsMessageBuilder.headerText(ButtonsMessageHeaderText.of("AQUI VAI A MENSAGEM EXPLICANDO O TIPO CONSULTA E NOME PACIENTE"));
-            buttonsMessageBuilder.footer("AGRADEÇO A COMPREENSAÕ");
-            buttonsMessageBuilder.buttons(List.of(buttonSim , buttonNao));
-
-            MessageContainer container = new MessageContainerBuilder()
-                    .buttonsMessage(buttonsMessageBuilder.build())
-                    .build();
-
-            whatsapp.sendMessage(numeroJid , container);
-
-        }).exceptionally(ex -> {
-            System.err.println("Falha ao obter a instância do WhatsApp: " + ex.getMessage());
-            return null;
-        });
+    public void conectar() {
+            init();
     }
 
+    public void desconectar() {
+        if (isDisconnecting) {
+            System.out.println("Desconexão já está em andamento.");
+            return;
+        }
 
+        try {
+           if (whatsappFuture != null && whatsappFuture.get() != null){
+               isDisconnecting = true;
+               whatsappFuture.get().logout().thenAccept(unused -> {
+                   whatsappFuture = new CompletableFuture<>();
+                   System.out.println("API DESCONECTADA");
+               }).exceptionally(throwable -> {
+                    System.out.println("ERRO NA API" + throwable);
+                   isDisconnecting = false;
+                   return null;
+               });
 
+           }
+
+        }catch (Exception e){
+            new RuntimeException("ALGUMA ERRO NA APLICAÇÃO");
+        }
+    }
+
+    public String getQrCode() {
+        return qrCode;
+    }
 }
