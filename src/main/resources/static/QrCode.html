@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Scanner</title>
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.0.7/html5-qrcode.min.js"></script>
+</head>
+<body>
+<div id="qr-code-container">
+    <img id="qr-code-image" src="/api/whatsapp/qrcode" alt="QR Code">
+</div>
+<div id="qr-reader" style="width: 500px;"></div>
+<div id="qr-reader-results"></div>
+
+<script>
+    function onScanSuccess(decodedText, decodedResult) {
+        console.log(`Code matched = ${decodedText}`, decodedResult);
+        document.getElementById('qr-reader-results').innerText = `QR Code: ${decodedText}`;
+
+        // Envia os dados para a API
+        fetch('/api/whatsapp/qrcode/response', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ qrCodeData: decodedText }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('QR code enviado com sucesso:', data);
+        })
+        .catch(error => {
+            console.error('Erro ao enviar o QR code:', error);
+        });
+    }
+
+    var html5QrcodeScanner = new Html5QrcodeScanner(
+        "qr-reader", { fps: 10, qrbox: 250 });
+
+    html5QrcodeScanner.render(onScanSuccess);
+</script>
+</body>
+</html>
