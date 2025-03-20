@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Atualização de Pacientes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            width: 95%;
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        tbody tr:nth-child(odd) {
+            background-color: #f9f9f9;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #e0e0e0;
+        }
+
+        .aceito {
+            background-color: green;
+            color: white;
+        }
+
+        .outro-aguardando {
+            background-color: yellow;
+            color: black;
+        }
+
+        .outro-motivo {
+            background-color: red;
+            color: white;
+        }
+
+        .actions {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .search-section {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .search-section input {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+
+        .search-section button {
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .search-section button:hover {
+            background-color: #0056b3;
+        }
+
+        .pdf-button {
+            background-color: green;
+            color: white;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .pdf-button:hover {
+            background-color: #004d00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Paciente Marcados Status</h1>
+        <div class="search-section">
+            <input type="text" id="searchInput" placeholder="Digite o filtro...">
+            <button onclick="fetchData()">Buscar</button>
+            <button class="pdf-button" onclick="downloadPdf()">Baixar PDF</button>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Numero Telefone</th>
+                    <th>Bairro</th>
+                    <th>Procedimento</th>
+                    <th>Data Consulta</th>
+                    <th>Motivo</th>
+                </tr>
+            </thead>
+            <tbody id="pacienteTableBody">
+            </tbody>
+        </table>
+    </div>
+    <script>
+        function fetchData() {
+            const searchInput = document.getElementById('searchInput').value;
+            
+            fetch('https://api.devdiogenes.shop/api/estaticas?filtro=' + searchInput)
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById('pacienteTableBody');
+                    tableBody.innerHTML = '';
+
+                    data.forEach(paciente => {
+                        const row = document.createElement('tr');
+
+                        const nomeColunaCell = document.createElement('td');
+                        nomeColunaCell.textContent = paciente.nome;
+                        row.appendChild(nomeColunaCell);
+
+                        const numeroCell = document.createElement('td');
+                        numeroCell.textContent = paciente.numero;
+                        row.appendChild(numeroCell);
+
+                        const bairroCell = document.createElement('td');
+                        bairroCell.textContent = paciente.bairro;
+                        row.appendChild(bairroCell);
+
+                        const consultaCell = document.createElement('td');
+                        consultaCell.textContent = paciente.consulta;
+                        row.appendChild(consultaCell);
+
+                        const dataCell = document.createElement('td');
+                        dataCell.textContent = paciente.data;
+                        row.appendChild(dataCell);
+
+                        const motivoCell = document.createElement('td');
+                        motivoCell.textContent = paciente.motivo;
+                        row.appendChild(motivoCell);
+
+                        if (paciente.motivo === "ACEITO") {
+                            motivoCell.classList.add('aceito');
+                        } else if (paciente.motivo === "AGUARDANDO") {
+                            motivoCell.classList.add('outro-aguardando');
+                        } else {
+                            motivoCell.classList.add('outro-motivo');
+                        }
+
+                        tableBody.appendChild(row);
+                    });
+                })
+                .catch(error => console.error('Erro ao buscar dados:', error));
+        }
+
+        function downloadPdf() {
+            const searchInput = document.getElementById('searchInput').value;
+            const url = 'https://api.devdiogenes.shop/api/estaticas/pdf?filtro=' + searchInput;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>
+

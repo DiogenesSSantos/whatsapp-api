@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Mensagens</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Painel de Mensagens</h1>
+        <div id="numeros-telefone-form">
+            <div class="input-group">
+                <label for="telefone">Número de Telefone:</label>
+                <input type="text" id="telefone" placeholder="DDD e o número sem acrescentar o 9" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                <button type="button" id="adicionarTelefoneBtn">Adicionar Número</button>
+            </div>
+        </div>
+        <div id="telefonesAdicionados"></div>
+        <div class="input-group">
+            <label for="paciente">Nome do Paciente:</label>
+            <input type="text" id="paciente" placeholder="Nome do Paciente" oninput="this.value = this.value.toUpperCase()">
+        </div>
+        <div class="input-group">
+            <label for="tipoConsulta">Tipo de Consulta:</label>
+            <input list="tipoConsultas" id="tipoConsulta" placeholder="Selecione ou digite o tipo de consulta" oninput="this.value = this.value.toUpperCase()">
+            <datalist id="tipoConsultas">
+                <option value="OFTALMOLOGISTA"></option>
+                <option value="TOMOGRAFIA"></option>
+                <option value="RESSONÂNCIA"></option>
+                <option value="MAMOGRAFIA"></option>
+            </datalist>
+        </div>
+        <div class="input-group">
+            <label for="bairro">Bairro:</label>
+            <input type="text" id="bairro" placeholder="Bairro" oninput="this.value = this.value.toUpperCase()">
+        </div>
+        <div class="input-group">
+            <label for="data">Data da consulta:</label>
+            <input type="date" id="data">
+        </div>
+        <button id="adicionarBtn">Adicionar Usuário</button>
+        <h2>Destinatários</h2>
+        <ul id="destinatarios"></ul>
+        <div class="actions">
+            <button id="enviarBtn">Enviar Mensagem</button>
+            <a id="monitorarBtn" href="paginaConsulta.html">Consultar</a>
+        </div>
+        <div id="statusMensagem" style="display:none;"></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
+
