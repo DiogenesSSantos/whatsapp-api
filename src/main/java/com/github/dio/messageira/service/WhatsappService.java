@@ -1,30 +1,43 @@
+
 package com.github.dio.messageira.service;
 
 
 import com.github.dio.messageira.controller.modeloRepresentacional.PacienteMR;
 import com.github.dio.messageira.listener.ListenerNovaMensagem;
+import com.github.dio.messageira.model.Paciente;
+import com.github.dio.messageira.repository.PacienteRepository;
 import it.auties.whatsapp.api.Whatsapp;
+import it.auties.whatsapp.listener.Listener;
 import it.auties.whatsapp.model.jid.Jid;
 import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 @Service
 public class WhatsappService {
+
 
     private static CompletableFuture<Whatsapp> whatsappFuture;
     private String qrCode;
     private Boolean isDisconnecting = true;
 
+    private Set<String> pacienteSetStringUUID = new HashSet<>();
+
+    private PacienteRepository pacienteRepository;
+
+    @Autowired
+    public WhatsappService(PacienteRepository pacienteRepository) {
+        this.pacienteRepository = pacienteRepository;
+    }
+
+
     @PostConstruct
     public void init() {
         whatsappFuture = new CompletableFuture<>();
 
-
-        System.out.println("AGORA VOU EXECUTAR A MONTAGEM DO WHASTSAPP");
         Whatsapp.webBuilder()
                 .lastConnection()
                 .unregistered(qrCode -> {
@@ -34,15 +47,15 @@ public class WhatsappService {
                 })
                 .addLoggedInListener(api -> {
                     whatsappFuture.complete(api);
-                    System.out.printf("conectado: %s%n", api.store().privacySettings());
+                    System.out.printf("conectado: %s%n" , api.store().privacySettings());
                     isDisconnecting = false;
 
                 })
                 .addDisconnectedListener(reason -> {
                     whatsappFuture = new CompletableFuture<>();
-                    System.out.printf("disconectado: %s%n", reason);
+                    System.out.printf("disconectado: %s%n" , reason);
                 })
-                .addNewChatMessageListener(message -> System.out.printf("New message: %s%n", message.toJson()))
+                .addNewChatMessageListener(message -> System.out.printf("nova mensagem: %s%n" , message.toJson()))
                 .connect()
                 .thenRun(() -> System.out.println("Conectado ao WhatsApp Web!"))
                 .exceptionally(ex -> {
@@ -56,14 +69,39 @@ public class WhatsappService {
     }
 
 
-    public void enviarMensagem(PacienteMR paciente) throws InterruptedException {
-        for (int i = 0; i < paciente.getNumeros().size(); i++) {
-            enviandoMensagemTexto(paciente, "55" + paciente.getNumeros().get(i));
-            Thread.sleep(10000L);
+    public void conectar() {
+        desconectar();
+        init();
+    }
+
+
+
+    public void desconectar() {
+        if (isDisconnecting) {
+            System.out.println("Desconexão já está em andamento.");
+            return;
         }
 
+        try {
+            if (whatsappFuture != null && whatsappFuture.get() != null) {
+                isDisconnecting = true;
+                whatsappFuture.get().logout().thenAccept(unused -> {
+                    whatsappFuture = new CompletableFuture<>();
+                    System.out.println("API DESCONECTADA");
+                }).exceptionally(throwable -> {
+                    System.out.println("ERRO NA API" + throwable);
+                    isDisconnecting = false;
+                    return null;
+                });
 
+            }
+
+        } catch (Exception e) {
+            new RuntimeException("ALGUMA ERRO NA APLICAÇÃO");
+        }
     }
+
+
 
 
     public void enviarMensagemLista(List<PacienteMR> pacienteMRList) {
@@ -77,10 +115,23 @@ public class WhatsappService {
     }
 
 
-    private static void enviandoMensagemTexto(PacienteMR pacienteMR, String numero) {
+    public void enviarMensagem(PacienteMR paciente) throws InterruptedException {
+        for (int i = 0; i < paciente.getNumeros().size(); i++) {
+            enviandoMensagemTexto(paciente, "55" + paciente.getNumeros().get(i));
+            Thread.sleep(10000L);
+        }
+
+
+    }
+
+
+    private void enviandoMensagemTexto(PacienteMR pacienteMR, String numero) {
 
         whatsappFuture.thenAccept(whatsapp -> {
-            whatsapp.addListener(new ListenerNovaMensagem(whatsapp, pacienteMR, numero));
+            var pacientePersistido = salvandoIncialmente(pacienteMR);
+
+            whatsapp.addListener(new ListenerNovaMensagem(numero, pacienteRepository, pacientePersistido));
+
 
             try {
 
@@ -92,17 +143,13 @@ public class WhatsappService {
                 var contactJid = Jid.of(numero);
 
                 String mensagem1 = String.format(
-                        "Bom dia! Somos da SECRETARIA DE SAÚDE DE VITÓRIA DE SANTO ANTÃO. Venho, por meio desta mensagem, informar sobre um comprovante de agendamento para:%n%n" +
-                                "Paciente: %S.%n%n" +
-                                "Consulta: %S.%n%n" +
-                                "Data da Consulta: %S.%n%n" +
-                                "Por favor, pegue este comprovante de agendamento com antecedência, no horário entre 08:00 e 14:00, na Secretaria de Saúde, setor de Regulação e Marcações.%n%n" +
-                                "Me confirme digitando (sim), caso possua interesse.%n%n" +
-                                "Caso não tenha mais interesse, digite (não) e esclareça o motivo da desistência.%n%n" +
-                                "Em último caso, se não conhecer o paciente, apenas ignore esta mensagem.%n%n" +
-                                "Agradeço a compreensão."
-                        , pacienteMR.getNome(), pacienteMR.getConsulta(), pacienteMR.getData(), pacienteMR.getData()
-                );
+                        "Olá %S , somos da Secretária de saúde de Vitoria de Santo Antão.%n%n" +
+                                "Estamos felizes em informá-lo sobre sua consulta ou exame: %n%S.%n%n" +
+                                "Gostaríamos de saber se você ainda tem interesse.%n%n" +
+                                "Por favor, responda SIM se estiver interessado, ou NÃO se não estiver. Caso não possua interesse, pedimos gentilmente que forneça sua justificativa..%n%n" +
+                                "Aguardamos sua resposta.%nAtenciosamente, Regulação de saúde."
+                        , pacienteMR.getNome() , pacienteMR.getConsulta());
+
                 whatsapp.sendMessage(contactJid, mensagem1).thenRun(() -> {
                     System.out.println("Mensagem enviada para: " + numero);
                 }).exceptionally(ex -> {
@@ -123,36 +170,38 @@ public class WhatsappService {
         });
     }
 
-    public void conectar() {
-            init();
-    }
-
-    public void desconectar() {
-        if (isDisconnecting) {
-            System.out.println("Desconexão já está em andamento.");
-            return;
-        }
-
-        try {
-           if (whatsappFuture != null && whatsappFuture.get() != null){
-               isDisconnecting = true;
-               whatsappFuture.get().logout().thenAccept(unused -> {
-                   whatsappFuture = new CompletableFuture<>();
-                   System.out.println("API DESCONECTADA");
-               }).exceptionally(throwable -> {
-                    System.out.println("ERRO NA API" + throwable);
-                   isDisconnecting = false;
-                   return null;
-               });
-
-           }
-
-        }catch (Exception e){
-            new RuntimeException("ALGUMA ERRO NA APLICAÇÃO");
-        }
-    }
-
     public String getQrCode() {
         return qrCode;
     }
+
+
+
+
+    private Paciente salvandoIncialmente(PacienteMR pacienteMR) {
+        if (!pacienteSetStringUUID.contains(pacienteMR.getId().toString())) {
+            var paciente = disassembleToObject(pacienteMR);
+            var pacientePersistido = pacienteRepository.save(paciente);
+            pacienteSetStringUUID.add(pacienteMR.getId().toString());
+            return pacientePersistido;
+        }
+        return pacienteRepository.findBycodigo(pacienteMR.getId().toString());
+    }
+
+
+    /*
+        Método para converte o modelo representacional (Input de dados)
+        no entity que vai ser persistido no banco de dados
+     */
+    private static Paciente disassembleToObject(PacienteMR pacienteMR) {
+        var paciente = new Paciente();
+        paciente.setCodigo(pacienteMR.getId().toString());
+        paciente.setNome(pacienteMR.getNome());
+        paciente.setNumero(pacienteMR.getNumeros().getFirst());
+        paciente.setConsulta(pacienteMR.getConsulta());
+        paciente.setDataConsulta(pacienteMR.getData());
+        paciente.setMotivo("AGUARDANDO");
+        paciente.setBairro(pacienteMR.getBairro());
+        return paciente;
+    }
+
 }

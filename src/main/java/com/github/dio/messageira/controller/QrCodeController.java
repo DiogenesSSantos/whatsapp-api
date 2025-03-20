@@ -14,8 +14,9 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
+
 @RestController
-@RequestMapping("/api/whatsapp")
+@RequestMapping("/api/conexao")
 public class QrCodeController {
 
     @Autowired
@@ -45,7 +46,6 @@ public class QrCodeController {
     public ResponseEntity<String> receberQrcode(@RequestBody QrCodeRequest qrCodeRequest) {
         String qrCodeData = qrCodeRequest.getQrCodeData();
         System.out.println("QR Code resposta recebido: " + qrCodeData);
-        // Adicione a lógica para processar o QR code aqui
 
         return new ResponseEntity<>("QR code resposta recebido com sucesso", HttpStatus.OK);
     }
