@@ -6,27 +6,38 @@ import com.github.dio.messageira.controller.modeloRepresentacional.PacienteMR;
 import com.github.dio.messageira.listener.ListenerNovaMensagem;
 import com.github.dio.messageira.model.Paciente;
 import com.github.dio.messageira.repository.PacienteRepository;
+import it.auties.whatsapp.api.MediaProxySetting;
+import it.auties.whatsapp.api.TextPreviewSetting;
+import it.auties.whatsapp.api.WebHistoryLength;
 import it.auties.whatsapp.api.Whatsapp;
-import it.auties.whatsapp.listener.Listener;
 import it.auties.whatsapp.model.jid.Jid;
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.*;
+
 
 @Service
 public class WhatsappService {
+
+    private static final Logger log = LoggerFactory.getLogger(WhatsappService.class);
 
 
     private static CompletableFuture<Whatsapp> whatsappFuture;
     private String qrCode;
     private Boolean isDisconnecting = true;
 
-    private Set<String> pacienteSetStringUUID = new HashSet<>();
+    private Set<String> pacienteSetStringUUID = new ConcurrentSkipListSet<>();
 
     private PacienteRepository pacienteRepository;
+
 
     @Autowired
     public WhatsappService(PacienteRepository pacienteRepository) {
@@ -38,8 +49,15 @@ public class WhatsappService {
     public void init() {
         whatsappFuture = new CompletableFuture<>();
 
+
         Whatsapp.webBuilder()
-                .lastConnection()
+                .firstConnection()
+                .name("CMCE LOGIN NÃO DESCONECTE")
+                .mediaProxySetting(MediaProxySetting.NONE)
+                .automaticMessageReceipts(false)
+                .textPreviewSetting(TextPreviewSetting.DISABLED)
+                .historyLength(WebHistoryLength.zero())
+                .autodetectListeners(true)
                 .unregistered(qrCode -> {
                     System.out.println("QRCodeRecebido");
                     this.qrCode = qrCode;
@@ -47,33 +65,24 @@ public class WhatsappService {
                 })
                 .addLoggedInListener(api -> {
                     whatsappFuture.complete(api);
-                    System.out.printf("conectado: %s%n" , api.store().privacySettings());
+                    System.out.printf("conectado: %s%n", api.store().privacySettings());
                     isDisconnecting = false;
 
                 })
                 .addDisconnectedListener(reason -> {
                     whatsappFuture = new CompletableFuture<>();
-                    System.out.printf("disconectado: %s%n" , reason);
+                    System.out.printf("disconectado: %s%n", reason);
                 })
-                .addNewChatMessageListener(message -> System.out.printf("nova mensagem: %s%n" , message.toJson()))
-                .connect()
-                .thenRun(() -> System.out.println("Conectado ao WhatsApp Web!"))
-                .exceptionally(ex -> {
-                    System.err.println("Erro ao conectar ao WhatsApp: " + ex.getMessage());
-                    ex.printStackTrace();
-                    whatsappFuture.completeExceptionally(ex);
-                    return null;
-                });
+                .connect();
 
 
     }
 
 
     public void conectar() {
-        desconectar();
+//        desconectar();
         init();
     }
-
 
 
     public void desconectar() {
@@ -85,7 +94,7 @@ public class WhatsappService {
         try {
             if (whatsappFuture != null && whatsappFuture.get() != null) {
                 isDisconnecting = true;
-                whatsappFuture.get().logout().thenAccept(unused -> {
+                whatsappFuture.get().disconnect().thenAccept(unused -> {
                     whatsappFuture = new CompletableFuture<>();
                     System.out.println("API DESCONECTADA");
                 }).exceptionally(throwable -> {
@@ -100,8 +109,6 @@ public class WhatsappService {
             new RuntimeException("ALGUMA ERRO NA APLICAÇÃO");
         }
     }
-
-
 
 
     public void enviarMensagemLista(List<PacienteMR> pacienteMRList) {
@@ -128,42 +135,43 @@ public class WhatsappService {
     private void enviandoMensagemTexto(PacienteMR pacienteMR, String numero) {
 
         whatsappFuture.thenAccept(whatsapp -> {
-            var pacientePersistido = salvandoIncialmente(pacienteMR);
-
-            whatsapp.addListener(new ListenerNovaMensagem(numero, pacienteRepository, pacientePersistido));
-
-
             try {
-
-                if (!whatsapp.isConnected()) {
-                    System.err.println("O WhatsApp não está conectado.");
-                    return;
-                }
-                System.out.println("Enviando mensagem para: " + numero);
                 var contactJid = Jid.of(numero);
+                if (whatsapp.hasWhatsapp(contactJid).get()) {
+                    var pacientePersistido = salvandoIncialmenteAguardando(pacienteMR);
+                    var listener = new ListenerNovaMensagem(numero, pacienteRepository, pacientePersistido);
 
-                String mensagem1 = String.format(
-                        "Olá %S , somos da Secretária de saúde de Vitoria de Santo Antão.%n%n" +
-                                "Estamos felizes em informá-lo sobre sua consulta ou exame: %n%S.%n%n" +
-                                "Gostaríamos de saber se você ainda tem interesse.%n%n" +
-                                "Por favor, responda SIM se estiver interessado, ou NÃO se não estiver. Caso não possua interesse, pedimos gentilmente que forneça sua justificativa..%n%n" +
-                                "Aguardamos sua resposta.%nAtenciosamente, Regulação de saúde."
-                        , pacienteMR.getNome() , pacienteMR.getConsulta());
+                    whatsapp.addListener(listener);
+                    if (!whatsapp.isConnected()) {
+                        System.err.println("O WhatsApp não está conectado.");
+                        return;
+                    }
+                    System.out.println("Enviando mensagem para: " + numero);
 
-                whatsapp.sendMessage(contactJid, mensagem1).thenRun(() -> {
-                    System.out.println("Mensagem enviada para: " + numero);
-                }).exceptionally(ex -> {
-                    System.err.println("Erro ao enviar mensagem: " + ex.getMessage());
-                    ex.printStackTrace();
-                    return null;
-                });
 
+                    String mensagem1 = String.format(
+                            "Olá %S , somos da Secretária de saúde de Vitoria de Santo Antão.%n%n" +
+                                    "Estamos felizes em informá-lo sobre sua consulta ou exame: %n%S.%n%n" +
+                                    "Gostaríamos de saber se você ainda tem interesse.%n%n" +
+                                    "Por favor, responda SIM se estiver interessado, ou NÃO se não estiver. Caso não possua interesse, pedimos gentilmente que forneça sua justificativa..%n%n" +
+                                    "Aguardamos sua resposta.%nAtenciosamente, Regulação de saúde."
+                            , pacienteMR.getNome(), pacienteMR.getConsulta());
+
+                    whatsapp.sendMessage(contactJid, mensagem1).thenRun(() -> {
+                        System.out.println("Mensagem enviada para: " + numero);
+                    }).exceptionally(ex -> {
+                        System.err.println("Erro ao enviar mensagem: " + ex.getMessage());
+                        ex.printStackTrace();
+                        return null;
+                    });
+                } else {
+
+                    salvandoNaoPossuiWhatsapp(pacienteMR);
+                }
             } catch (Exception e) {
                 System.err.println("Erro ao enviar mensagem: " + e.getMessage());
                 e.printStackTrace();
             }
-
-
         }).exceptionally(ex -> {
             System.err.println("Falha ao obter a instância do WhatsApp: " + ex.getMessage());
             return null;
@@ -175,16 +183,36 @@ public class WhatsappService {
     }
 
 
+    private Paciente salvandoIncialmenteAguardando(PacienteMR pacienteMR) {
+        var pacienteBdExiste = pacienteRepository.findBycodigo(pacienteMR.getId().toString());
+        var paciente = disassembleToObject(pacienteMR);
 
 
-    private Paciente salvandoIncialmente(PacienteMR pacienteMR) {
-        if (!pacienteSetStringUUID.contains(pacienteMR.getId().toString())) {
-            var paciente = disassembleToObject(pacienteMR);
-            var pacientePersistido = pacienteRepository.save(paciente);
-            pacienteSetStringUUID.add(pacienteMR.getId().toString());
-            return pacientePersistido;
+        if (pacienteBdExiste == null) {
+            pacienteBdExiste = paciente;
+            return pacienteRepository.save(pacienteBdExiste);
         }
-        return pacienteRepository.findBycodigo(pacienteMR.getId().toString());
+
+
+        if (!pacienteSetStringUUID.contains(pacienteMR.getId().toString())) {
+            pacienteBdExiste.setMotivo(paciente.getMotivo());
+            pacienteBdExiste.setNumero(paciente.getNumero());
+            pacienteSetStringUUID.add(pacienteMR.getId().toString());
+            return pacienteRepository.save(pacienteBdExiste);
+        }
+
+
+        return pacienteBdExiste;
+    }
+
+
+    private void salvandoNaoPossuiWhatsapp(PacienteMR pacienteMR) {
+        var pacienteExiste = pacienteRepository.findBycodigo(pacienteMR.getId().toString());
+
+        if (pacienteExiste == null) {
+            var paciente = disassembleToObjectNaoPossuiWhatsapp(pacienteMR);
+            pacienteRepository.save(paciente);
+        }
     }
 
 
@@ -204,4 +232,36 @@ public class WhatsappService {
         return paciente;
     }
 
+    private static Paciente disassembleToObjectNaoPossuiWhatsapp(PacienteMR pacienteMR) {
+        var paciente = new Paciente();
+        paciente.setCodigo(pacienteMR.getId().toString());
+        paciente.setNome(pacienteMR.getNome());
+        paciente.setNumero("NUMERO NAO EXISTE WHATSAPP");
+        paciente.setConsulta(pacienteMR.getConsulta());
+        paciente.setDataConsulta(pacienteMR.getData());
+        paciente.setMotivo("Nao_Possui_Whatsapp");
+        paciente.setBairro(pacienteMR.getBairro());
+        return paciente;
+    }
+
+
+    @Scheduled(fixedRate = 45000)
+    public void verificarConexao() throws InterruptedException {
+        System.gc();
+        TimeUnit.SECONDS.sleep(15);
+        Whatsapp whatsapp = whatsappFuture.getNow(null);
+
+        if (whatsapp == null) {
+            System.out.println("Instância do WhatsApp ainda não disponível.");
+            conectar();
+        } else if (!whatsapp.isConnected()) {
+            System.err.println("WhatsApp DESCONECTADO! É necessário reconectar.");
+            conectar();
+        }
+    }
+
+
 }
+
+
+

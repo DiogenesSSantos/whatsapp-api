@@ -16,28 +16,42 @@ import java.util.UUID;
 @Getter
 @Setter
 public class PacienteMR {
-
-    @Schema(description = "Gera uma id aleatório para usuário", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6" , hidden = true)
+    @Schema(
+            description = "Gera uma id aleatório para usuário",
+            example = "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            hidden = true
+    )
     private UUID id = UUID.randomUUID();
-
-    @Schema(description = "Nome do paciente", example = "Diogenes", required = true)
+    @Schema(
+            description = "Nome do paciente",
+            example = "Diogenes",
+            required = true
+    )
     private String nome;
-
-    @Schema(description = "Lista de números de telefone do paciente sem precisar passar o digito 9 antes do numero", example = "[\"digite aqui apenas numero exemplo->8188889999\", " +
-            "\"digite aqui apenas numero exemplo->8188889999\"]" , required = true)
+    @Schema(
+            description = "Lista de números de telefone do paciente sem precisar passar o digito 9 antes do numero",
+            example = "[\"digite aqui apenas numero exemplo->8188889999\", \"digite aqui apenas numero exemplo->8188889999\"]",
+            required = true
+    )
     private List<String> numeros;
-
-    @Schema(description = "Bairro do paciente", example = "")
+    @Schema(
+            description = "Bairro do paciente",
+            example = ""
+    )
     private String bairro;
-
-    @Schema(description = "Descrição da consulta do paciente", example = "")
+    @Schema(
+            description = "Descrição da consulta do paciente",
+            example = ""
+    )
     private String consulta;
-
-    @Schema(description = "Data da consulta do paciente", example = "01/01/2050")
+    @Schema(
+            description = "Data da consulta do paciente",
+            example = "01/01/2050"
+    )
     private String data;
 
     public UUID getId() {
-        return id;
+        return this.id;
     }
 
     public void setId(UUID id) {
@@ -45,7 +59,7 @@ public class PacienteMR {
     }
 
     public String getNome() {
-        return nome;
+        return this.nome;
     }
 
     public void setNome(String nome) {
@@ -53,7 +67,7 @@ public class PacienteMR {
     }
 
     public List<String> getNumeros() {
-        return numeros;
+        return this.numeros;
     }
 
     public void setNumeros(List<String> numeros) {
@@ -61,7 +75,7 @@ public class PacienteMR {
     }
 
     public String getBairro() {
-        return bairro;
+        return this.bairro;
     }
 
     public void setBairro(String bairro) {
@@ -69,7 +83,7 @@ public class PacienteMR {
     }
 
     public String getConsulta() {
-        return consulta;
+        return this.consulta;
     }
 
     public void setConsulta(String consulta) {
@@ -77,7 +91,7 @@ public class PacienteMR {
     }
 
     public String getData() {
-        return data;
+        return this.data;
     }
 
     public void setData(String data) {

@@ -13,15 +13,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 @Service
 public class FIlaService {
-
     @Autowired
     private PacienteRepository pacienteRepository;
-
-    private static final LinkedBlockingQueue<Runnable> fila = new LinkedBlockingQueue<>();
+    private static final LinkedBlockingQueue<Runnable> fila = new LinkedBlockingQueue();
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-
-    public FIlaService() {;
+    public FIlaService() {
     }
 
     @Autowired
@@ -29,59 +26,43 @@ public class FIlaService {
         this.pacienteRepository = pacienteRepository;
     }
 
-    public void setPacienteRepository(PacienteRepository pacienteRepository) {
-        this.pacienteRepository = pacienteRepository;
-    }
-
-    private CompletableFuture<Void> persistirDados(String mensagemUsuario, Paciente paciente) {
+    private CompletableFuture<Void> persistirDados(String mensagemUsuario, Paciente paciente, String numero) {
         return CompletableFuture.runAsync(() -> {
             if (mensagemUsuario.equalsIgnoreCase("ACEITO")) {
                 paciente.setMotivo("ACEITO");
-                pacienteRepository.save(paciente);
-
-                return;
+                paciente.setNumero(numero);
+                this.pacienteRepository.save(paciente);
+            } else {
+                paciente.setMotivo(mensagemUsuario);
+                paciente.setNumero(numero);
+                this.pacienteRepository.save(paciente);
             }
-            paciente.setMotivo(mensagemUsuario);
-            pacienteRepository.save(paciente);
-
-
         });
-
     }
 
+    public void excutarPersistencia(String mensagem, Paciente paciente, String numero) {
+        fila.add((Runnable)() -> {
+            try {
+                this.persistirDados(mensagem, paciente , numero.substring(3)).get();
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
 
-    public void excutarPersistencia (String mensagem, Paciente paciente) {
-        //Produces da threads, preparando a fila
-        fila.add(()-> {
-           try {
-                persistirDados(mensagem,paciente).get();
-           }catch (Exception exception) {
-               exception.printStackTrace();
-           }
         });
-
-
-        //Consume a fila para executar a persistencia de dados assincronamente.
-        if (!executorService.isShutdown()) {
-
-            executorService.submit(()-> {
-                while (!fila.isEmpty()) {
+        if (!this.executorService.isShutdown()) {
+            this.executorService.submit(() -> {
+                while(!fila.isEmpty()) {
                     try {
-                        Runnable consumo = fila.take();
+                        Runnable consumo = (Runnable)fila.take();
                         consumo.run();
-                    }catch (InterruptedException exception) {
+                    } catch (InterruptedException exception) {
                         exception.printStackTrace();
                         Thread.currentThread().interrupt();
                     }
                 }
+
             });
         }
 
     }
-
-
-
-
-
-
 }

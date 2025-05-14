@@ -1,4 +1,4 @@
-package com.github.dio.messageira.service.QrCodeService;
+package com.github.dio.messageira.infraestruct.QrCodeService;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;

@@ -124,10 +124,16 @@
     <div class="container">
         <h1>Paciente Marcados Status</h1>
         <div class="search-section">
-            <input type="text" id="searchInput" placeholder="Digite o filtro...">
+            <input type="text" id="nomeInput" placeholder="Nome">
+            <input type="text" id="bairroInput" placeholder="Bairro">
+            <input type="date" id="dataInicialInput" placeholder="Data Inicial">
+            <input type="date" id="dataFinalInput" placeholder="Data Final">
+            <input type="text" id="consultaInput" placeholder="Tipo de Consulta">
+            <input type="text" id="motivoInput" placeholder="Motivo">
             <button onclick="fetchData()">Buscar</button>
             <button class="pdf-button" onclick="downloadPdf()">Baixar PDF</button>
         </div>
+
         <table>
             <thead>
                 <tr>
@@ -145,60 +151,122 @@
     </div>
     <script>
         function fetchData() {
-            const searchInput = document.getElementById('searchInput').value;
-            
-            fetch('https://api.devdiogenes.shop/api/estaticas?filtro=' + searchInput)
-                .then(response => response.json())
-                .then(data => {
-                    const tableBody = document.getElementById('pacienteTableBody');
-                    tableBody.innerHTML = '';
+    const nome = document.getElementById('nomeInput').value.trim();
+    const bairro = document.getElementById('bairroInput').value.trim();
+    let dataMarcacaoInicial = document.getElementById('dataInicialInput').value.trim();
+    let dataMarcacaoFinal = document.getElementById('dataFinalInput').value.trim();
+    const consulta = document.getElementById('consultaInput').value.trim();
+    const motivo = document.getElementById('motivoInput').value.trim();
 
-                    data.forEach(paciente => {
-                        const row = document.createElement('tr');
+    // Formatar as datas para o formato dd/MM/yyyy
+    if (dataMarcacaoInicial) {
+        const [ano, mes, dia] = dataMarcacaoInicial.split("-");
+        dataMarcacaoInicial = `${dia}/${mes}/${ano}`;
+    }
+    if (dataMarcacaoFinal) {
+        const [ano, mes, dia] = dataMarcacaoFinal.split("-");
+        dataMarcacaoFinal = `${dia}/${mes}/${ano}`;
+    }
 
-                        const nomeColunaCell = document.createElement('td');
-                        nomeColunaCell.textContent = paciente.nome;
-                        row.appendChild(nomeColunaCell);
+    // Construir a URL com os filtros
+    let url = 'http://devdiogenes.shop/api/estatisticas?';
+    if (nome) url += `nome=${encodeURIComponent(nome)}&`;
+    if (bairro) url += `bairro=${encodeURIComponent(bairro)}&`;
+    if (dataMarcacaoInicial) url += `dataMarcacaoInicial=${encodeURIComponent(dataMarcacaoInicial)}&`;
+    if (dataMarcacaoFinal) url += `dataMarcacaoFinal=${encodeURIComponent(dataMarcacaoFinal)}&`;
+    if (consulta) url += `consulta=${encodeURIComponent(consulta)}&`;
+    if (motivo) url += `motivo=${encodeURIComponent(motivo)}&`;
 
-                        const numeroCell = document.createElement('td');
-                        numeroCell.textContent = paciente.numero;
-                        row.appendChild(numeroCell);
+    // Remover o último "&" da URL, caso exista
+    url = url.endsWith("&") ? url.slice(0, -1) : url;
 
-                        const bairroCell = document.createElement('td');
-                        bairroCell.textContent = paciente.bairro;
-                        row.appendChild(bairroCell);
+    console.log("URL gerada para requisição:", url); // Debug
 
-                        const consultaCell = document.createElement('td');
-                        consultaCell.textContent = paciente.consulta;
-                        row.appendChild(consultaCell);
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Erro HTTP! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const tableBody = document.getElementById('pacienteTableBody');
+            tableBody.innerHTML = '';
 
-                        const dataCell = document.createElement('td');
-                        dataCell.textContent = paciente.data;
-                        row.appendChild(dataCell);
+            data.forEach(paciente => {
+                const row = document.createElement('tr');
 
-                        const motivoCell = document.createElement('td');
-                        motivoCell.textContent = paciente.motivo;
-                        row.appendChild(motivoCell);
+                const nomeColunaCell = document.createElement('td');
+                nomeColunaCell.textContent = paciente.nome;
+                row.appendChild(nomeColunaCell);
 
-                        if (paciente.motivo === "ACEITO") {
-                            motivoCell.classList.add('aceito');
-                        } else if (paciente.motivo === "AGUARDANDO") {
-                            motivoCell.classList.add('outro-aguardando');
-                        } else {
-                            motivoCell.classList.add('outro-motivo');
-                        }
+                const numeroCell = document.createElement('td');
+                numeroCell.textContent = paciente.numero;
+                row.appendChild(numeroCell);
 
-                        tableBody.appendChild(row);
-                    });
-                })
-                .catch(error => console.error('Erro ao buscar dados:', error));
-        }
+                const bairroCell = document.createElement('td');
+                bairroCell.textContent = paciente.bairro;
+                row.appendChild(bairroCell);
 
-        function downloadPdf() {
-            const searchInput = document.getElementById('searchInput').value;
-            const url = 'https://api.devdiogenes.shop/api/estaticas/pdf?filtro=' + searchInput;
-            window.open(url, '_blank');
-        }
+                const consultaCell = document.createElement('td');
+                consultaCell.textContent = paciente.consulta;
+                row.appendChild(consultaCell);
+
+                const dataCell = document.createElement('td');
+                dataCell.textContent = paciente.dataConsulta;
+                row.appendChild(dataCell);
+
+                const motivoCell = document.createElement('td');
+                motivoCell.textContent = paciente.motivo;
+                row.appendChild(motivoCell);
+
+                if (paciente.motivo === "ACEITO") {
+                    motivoCell.classList.add('aceito');
+                } else if (paciente.motivo === "AGUARDANDO") {
+                    motivoCell.classList.add('outro-aguardando');
+                } else {
+                    motivoCell.classList.add('outro-motivo');
+                }
+
+                tableBody.appendChild(row);
+            });
+        })
+        .catch(error => console.error('Erro ao buscar dados:', error));
+}
+function downloadPdf() {
+    const nome = document.getElementById('nomeInput').value.trim();
+    const bairro = document.getElementById('bairroInput').value.trim();
+    let dataMarcacaoInicial = document.getElementById('dataInicialInput').value.trim();
+    let dataMarcacaoFinal = document.getElementById('dataFinalInput').value.trim();
+    const consulta = document.getElementById('consultaInput').value.trim();
+    const motivo = document.getElementById('motivoInput').value.trim();
+
+    // Formatar as datas para o formato dd/MM/yyyy
+    if (dataMarcacaoInicial) {
+        const [ano, mes, dia] = dataMarcacaoInicial.split("-");
+        dataMarcacaoInicial = `${dia}/${mes}/${ano}`;
+    }
+    if (dataMarcacaoFinal) {
+        const [ano, mes, dia] = dataMarcacaoFinal.split("-");
+        dataMarcacaoFinal = `${dia}/${mes}/${ano}`;
+    }
+
+    // Construir a URL com os filtros
+    let url = 'http://devdiogenes.shop/api/estatisticas/pdf?';
+    if (nome) url += `nome=${encodeURIComponent(nome)}&`;
+    if (bairro) url += `bairro=${encodeURIComponent(bairro)}&`;
+    if (dataMarcacaoInicial) url += `dataMarcacaoInicial=${encodeURIComponent(dataMarcacaoInicial)}&`;
+    if (dataMarcacaoFinal) url += `dataMarcacaoFinal=${encodeURIComponent(dataMarcacaoFinal)}&`;
+    if (consulta) url += `consulta=${encodeURIComponent(consulta)}&`;
+    if (motivo) url += `motivo=${encodeURIComponent(motivo)}&`;
+
+    url = url.endsWith("&") ? url.slice(0, -1) : url;
+
+    console.log("URL gerada para PDF:", url); // Debug
+
+    window.open(url, '_blank');
+}
+
     </script>
 </body>
 </html>

@@ -12,17 +12,4 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @ControllerAdvice
 public class ApiHandlerException extends ResponseEntityExceptionHandler {
 
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handlerNumeroErrado(Exception ex , WebRequest web) {
-
-        return handleExceptionInternal(ex, null , null , null , null);
-    }
-
-
-    @Override
-    protected ResponseEntity<Object> handleExceptionInternal(Exception ex, Object body, HttpHeaders headers, HttpStatusCode statusCode, WebRequest request) {
-
-        return super.handleExceptionInternal(ex, body, headers, statusCode, request);
-    }
 }

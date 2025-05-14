@@ -11,35 +11,37 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin(origins = "*")
+@CrossOrigin(
+        origins = {"*"}
+)
 @RestController
-@RequestMapping(value = "/api/zap" , produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(
+        value = {"/api/zap"},
+        produces = {"application/json"}
+)
 public class whatssappApiController extends WhatsappDocumentationOpenAPI {
-
     @Autowired
     private WhatsappService service;
 
-
-    @GetMapping("/")
+    @GetMapping({"/"})
     public String home() {
         return "index";
     }
 
-    @PostMapping("/enviarList")
+    @PostMapping({"/enviarList"})
     public void enviarParaLista(@RequestBody List<PacienteMR> pacienteMR) {
-        service.enviarMensagemLista(pacienteMR);
+        this.service.enviarMensagemLista(pacienteMR);
     }
 
-    @DeleteMapping("/desconectar")
+    @DeleteMapping({"/desconectar"})
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void desconectar() {
-        service.desconectar();
+    public void desconectarWhatsApp() {
+        this.service.desconectar();
     }
 
-    @PutMapping("/reconectar")
+    @PutMapping({"/reconectar"})
     @ResponseStatus(HttpStatus.OK)
-    public void reconectar() {
-        service.conectar();
+    public void reconectarWhatsApp() {
+        this.service.conectar();
     }
-
 }

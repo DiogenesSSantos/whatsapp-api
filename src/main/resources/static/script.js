@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", function() {
         statusMensagemDiv.textContent = "Enviando...";
         enviarBtn.disabled = true;
 
-        axios.post('https://api.devdiogenes.shop/api/zap/enviarList', destinatarios, {
+        axios.post('http://devdiogenes.shop/api/zap/enviarList', destinatarios, {
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -107,4 +107,5 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById("telefone").value = "";
     }
 });
+
 

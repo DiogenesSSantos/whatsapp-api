@@ -28,11 +28,11 @@ public abstract class WhatsappDocumentationOpenAPI {
 
     @Operation(summary = "Desconectar a instancia", description = "Desconecta a instancia do whatsapp, " +
             "em seguida voce deve usar o método reconectar para obter uma nova QrCode de conexão")
-    public abstract void desconectar();
+    public abstract void desconectarWhatsApp();
 
     @Operation(summary = "Reconecta whatsapp na aplicação", description = "Depois de reconecta usario deve" +
             " chamar endpoints do QrCode")
-    public abstract void reconectar();
+    public abstract void reconectarWhatsApp();
 
 
 }
