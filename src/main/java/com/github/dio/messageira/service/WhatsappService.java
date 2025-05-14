@@ -27,7 +27,10 @@ import java.util.concurrent.*;
 @Service
 public class WhatsappService {
 
-    private static final Logger log = LoggerFactory.getLogger(WhatsappService.class);
+    private static final Logger log = LoggerFactory.getLogger(com.github.dio.messageira.service.WhatsappService.class);
+
+    private static final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+    private static final LinkedBlockingQueue<ListenerNovaMensagem> queue = new LinkedBlockingQueue<>();
 
 
     private static CompletableFuture<Whatsapp> whatsappFuture;
@@ -43,6 +46,7 @@ public class WhatsappService {
     public WhatsappService(PacienteRepository pacienteRepository) {
         this.pacienteRepository = pacienteRepository;
     }
+
 
 
     @PostConstruct
@@ -78,9 +82,13 @@ public class WhatsappService {
 
     }
 
+    @PostConstruct
+    public void executeThreadLimpezaMemoria() {
+        this.limpandoListLinkedWhatsappListener();
+    }
+
 
     public void conectar() {
-//        desconectar();
         init();
     }
 
@@ -140,7 +148,7 @@ public class WhatsappService {
                 if (whatsapp.hasWhatsapp(contactJid).get()) {
                     var pacientePersistido = salvandoIncialmenteAguardando(pacienteMR);
                     var listener = new ListenerNovaMensagem(numero, pacienteRepository, pacientePersistido);
-
+                    queue.add(listener);
                     whatsapp.addListener(listener);
                     if (!whatsapp.isConnected()) {
                         System.err.println("O WhatsApp não está conectado.");
@@ -261,7 +269,34 @@ public class WhatsappService {
     }
 
 
+    public static void limpandoListLinkedWhatsappListener() {
+        Runnable runnable = () -> {
+            if (queue.isEmpty()) {
+                System.out.println("VAZIA");;
+                System.out.println(queue);
+                return;
+            }
+            System.out.println("Limpando o fila");
+            System.out.println(queue);
+            Iterator<ListenerNovaMensagem> iterator = queue.iterator();
+            while (iterator.hasNext()) {
+                var observado = iterator.next();
+                whatsappFuture.thenAccept(whatsapp -> {
+                    whatsapp.removeListener(observado);
+                });
+            }
+            queue.clear();
+            System.out.println(queue);
+        };
+
+        scheduledExecutorService.scheduleAtFixedRate(runnable , 0 , 36 , TimeUnit.HOURS);
+
+    }
 }
+
+
+
+
 
 
 
