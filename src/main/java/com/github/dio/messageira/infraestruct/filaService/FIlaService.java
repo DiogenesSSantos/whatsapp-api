@@ -15,16 +15,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class FIlaService {
     @Autowired
     private PacienteRepository pacienteRepository;
-    private static final LinkedBlockingQueue<Runnable> fila = new LinkedBlockingQueue();
-    private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-    public FIlaService() {
-    }
+    private static final LinkedBlockingQueue<Runnable> fila = new LinkedBlockingQueue(250);
+    private static final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-    @Autowired
-    public FIlaService(PacienteRepository pacienteRepository) {
-        this.pacienteRepository = pacienteRepository;
-    }
+
 
     private CompletableFuture<Void> persistirDados(String mensagemUsuario, Paciente paciente, String numero) {
         return CompletableFuture.runAsync(() -> {
@@ -41,19 +36,21 @@ public class FIlaService {
     }
 
     public void excutarPersistencia(String mensagem, Paciente paciente, String numero) {
-        fila.add((Runnable)() -> {
+        fila.add(() -> {
             try {
-                this.persistirDados(mensagem, paciente , numero.substring(3)).get();
+                this.persistirDados(mensagem, paciente, numero.substring(3)).get();
             } catch (Exception exception) {
                 exception.printStackTrace();
             }
 
         });
+
+
         if (!this.executorService.isShutdown()) {
             this.executorService.submit(() -> {
-                while(!fila.isEmpty()) {
+                while (!fila.isEmpty()) {
                     try {
-                        Runnable consumo = (Runnable)fila.take();
+                        Runnable consumo = fila.take();
                         consumo.run();
                     } catch (InterruptedException exception) {
                         exception.printStackTrace();

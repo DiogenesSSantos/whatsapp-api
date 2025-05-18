@@ -1,7 +1,7 @@
 package com.github.dio.messageira.infraestruct.reports;
 
 
-import com.github.dio.messageira.model.Filtro;
+import com.github.dio.messageira.model.FiltroPaciente;
 import com.github.dio.messageira.model.Paciente;
 import com.github.dio.messageira.repository.PacienteRepository;
 import net.sf.jasperreports.engine.JasperExportManager;
@@ -22,13 +22,13 @@ public class PdfMarcacoesReports {
     @Autowired
     PacienteRepository pacienteRepository;
 
-    public byte[] emitirPDF(Filtro filtro) {
-        if (filtro == null) {
+    public byte[] emitirPDF(FiltroPaciente filtroPaciente) {
+        if (filtroPaciente == null) {
             List<Paciente> pegandoTodaLista = this.pacienteRepository.findAll();
             pegandoTodaLista.sort(Comparator.naturalOrder());
             return this.preparandoJasper(pegandoTodaLista);
         } else {
-            List<Paciente> pegandoListFiltrada = this.pacienteRepository.filtrar(filtro);
+            List<Paciente> pegandoListFiltrada = this.pacienteRepository.filtrar(filtroPaciente);
             pegandoListFiltrada.sort(Comparator.naturalOrder());
             return this.preparandoJasper(pegandoListFiltrada);
         }

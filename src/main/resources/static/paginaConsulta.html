@@ -62,6 +62,11 @@
             color: black;
         }
 
+         .outro-naorespondido {
+            background-color: #091ae9;
+            color: white;
+        }
+
         .outro-motivo {
             background-color: red;
             color: white;
@@ -224,10 +229,11 @@
                     motivoCell.classList.add('aceito');
                 } else if (paciente.motivo === "AGUARDANDO") {
                     motivoCell.classList.add('outro-aguardando');
+                } else if (paciente.motivo === "NAO_RESPONDIDO") {
+                    motivoCell.classList.add('naorespondido');
                 } else {
                     motivoCell.classList.add('outro-motivo');
                 }
-
                 tableBody.appendChild(row);
             });
         })
