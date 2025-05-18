@@ -3,8 +3,10 @@ package com.github.dio.messageira.service;
 
 
 import com.github.dio.messageira.controller.modeloRepresentacional.PacienteMR;
+import com.github.dio.messageira.infraestruct.filaService.FIlaService;
 import com.github.dio.messageira.listener.ListenerNovaMensagem;
 import com.github.dio.messageira.model.Paciente;
+import com.github.dio.messageira.model.PacienteEncapsuladoNaoRespondido;
 import com.github.dio.messageira.repository.PacienteRepository;
 import it.auties.whatsapp.api.MediaProxySetting;
 import it.auties.whatsapp.api.TextPreviewSetting;
@@ -18,9 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
 
 
@@ -28,17 +28,21 @@ import java.util.concurrent.*;
 public class WhatsappService {
 
     private static final Logger log = LoggerFactory.getLogger(com.github.dio.messageira.service.WhatsappService.class);
+    public static final String NAO_RESPONDIDA_MSG_PADRÃO = "Como não recebemos sua resposta dentro do prazo de 24 horas, " +
+            "seu comprovante de agendamento será encaminhado para a Unidade Básica de Saúde (Posto de Saúde) do seu bairro.";
+
+    @Autowired
+    private FIlaService filaService;
+
 
     private static final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-    private static final LinkedBlockingQueue<ListenerNovaMensagem> queue = new LinkedBlockingQueue<>();
-
-
+    private static final LinkedBlockingQueue<ListenerNovaMensagem> queue = new LinkedBlockingQueue<>(250);
+    private static Set<String> pacienteSetStringUUID = new ConcurrentSkipListSet<>();
     private static CompletableFuture<Whatsapp> whatsappFuture;
+    public static final List<PacienteEncapsuladoNaoRespondido> pacienteList = new LinkedList<>();
+
     private String qrCode;
     private Boolean isDisconnecting = true;
-
-    private Set<String> pacienteSetStringUUID = new ConcurrentSkipListSet<>();
-
     private PacienteRepository pacienteRepository;
 
 
@@ -46,7 +50,6 @@ public class WhatsappService {
     public WhatsappService(PacienteRepository pacienteRepository) {
         this.pacienteRepository = pacienteRepository;
     }
-
 
 
     @PostConstruct
@@ -84,7 +87,7 @@ public class WhatsappService {
 
     @PostConstruct
     public void executeThreadLimpezaMemoria() {
-        this.limpandoListLinkedWhatsappListener();
+        limpandoListLinkedWhatsappListener();
     }
 
 
@@ -118,6 +121,10 @@ public class WhatsappService {
         }
     }
 
+    public String getQrCode() {
+        return qrCode;
+    }
+
 
     public void enviarMensagemLista(List<PacienteMR> pacienteMRList) {
         pacienteMRList.forEach(pacienteMR -> {
@@ -147,9 +154,14 @@ public class WhatsappService {
                 var contactJid = Jid.of(numero);
                 if (whatsapp.hasWhatsapp(contactJid).get()) {
                     var pacientePersistido = salvandoIncialmenteAguardando(pacienteMR);
-                    var listener = new ListenerNovaMensagem(numero, pacienteRepository, pacientePersistido);
+                    PacienteEncapsuladoNaoRespondido pacienteNaoRespondido = new PacienteEncapsuladoNaoRespondido(pacientePersistido, contactJid);
+                    pacienteList.add(pacienteNaoRespondido);
+
+                    var listener = new ListenerNovaMensagem(numero, pacienteRepository, pacientePersistido, queue, pacienteNaoRespondido, filaService);
                     queue.add(listener);
                     whatsapp.addListener(listener);
+
+
                     if (!whatsapp.isConnected()) {
                         System.err.println("O WhatsApp não está conectado.");
                         return;
@@ -186,10 +198,6 @@ public class WhatsappService {
         });
     }
 
-    public String getQrCode() {
-        return qrCode;
-    }
-
 
     private Paciente salvandoIncialmenteAguardando(PacienteMR pacienteMR) {
         var pacienteBdExiste = pacienteRepository.findBycodigo(pacienteMR.getId().toString());
@@ -198,6 +206,7 @@ public class WhatsappService {
 
         if (pacienteBdExiste == null) {
             pacienteBdExiste = paciente;
+            pacienteSetStringUUID.add(pacienteMR.getId().toString());
             return pacienteRepository.save(pacienteBdExiste);
         }
 
@@ -209,7 +218,6 @@ public class WhatsappService {
             return pacienteRepository.save(pacienteBdExiste);
         }
 
-
         return pacienteBdExiste;
     }
 
@@ -220,6 +228,15 @@ public class WhatsappService {
         if (pacienteExiste == null) {
             var paciente = disassembleToObjectNaoPossuiWhatsapp(pacienteMR);
             pacienteRepository.save(paciente);
+        }
+    }
+
+    private void salvandoNaoRespondido(Paciente paciente) {
+        var pacienteExiste = pacienteRepository.findBycodigo(paciente.getId().toString());
+        if (pacienteExiste == null) {
+            paciente.setMotivo("NAO_RESPONDIDO");
+            pacienteRepository.save(paciente);
+
         }
     }
 
@@ -269,28 +286,56 @@ public class WhatsappService {
     }
 
 
-    public static void limpandoListLinkedWhatsappListener() {
+    public void limpandoListLinkedWhatsappListener() {
+
         Runnable runnable = () -> {
             if (queue.isEmpty()) {
-                System.out.println("VAZIA");;
-                System.out.println(queue);
+                log.warn("___FILA LISTENER VAZIA___");
+                pacienteSetStringUUID.clear();
+                queue.clear();
+                pacienteList.clear();
+                ListenerNovaMensagem.uuidUnicoUsuarioSet.clear();
                 return;
             }
-            System.out.println("Limpando o fila");
-            System.out.println(queue);
+
             Iterator<ListenerNovaMensagem> iterator = queue.iterator();
             while (iterator.hasNext()) {
                 var observado = iterator.next();
-                whatsappFuture.thenAccept(whatsapp -> {
-                    whatsapp.removeListener(observado);
-                });
+                observado.resetThis();
+                whatsappFuture.thenAccept(whatsapp -> whatsapp.removeListener(observado));
             }
-            queue.clear();
-            System.out.println(queue);
+
+
+            CompletableFuture.runAsync(() -> {
+                if (!pacienteList.isEmpty()) {
+
+                    pacienteList.forEach(paciente -> {
+                        if (!ListenerNovaMensagem.uuidUnicoUsuarioSet.contains(paciente.getPaciente().getCodigo())) {
+                            salvandoNaoRespondido(paciente.getPaciente());
+                            try {
+                                TimeUnit.SECONDS.sleep(10);
+                                whatsappFuture.get().sendMessage(paciente.getNumero(),
+                                        NAO_RESPONDIDA_MSG_PADRÃO);
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            } catch (ExecutionException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    });
+                }
+            }).thenRun(() -> {
+                log.warn("____LIMPEZA PERIÓDICA____");
+                pacienteSetStringUUID.clear();
+                queue.clear();
+                pacienteList.clear();
+                ListenerNovaMensagem.uuidUnicoUsuarioSet.clear();
+            });
         };
 
-        scheduledExecutorService.scheduleAtFixedRate(runnable , 0 , 36 , TimeUnit.HOURS);
 
+
+        scheduledExecutorService.scheduleAtFixedRate(runnable, 12, 24, TimeUnit.HOURS);
     }
 }
 

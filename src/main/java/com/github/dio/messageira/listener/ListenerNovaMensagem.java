@@ -2,7 +2,9 @@ package com.github.dio.messageira.listener;
 
 import com.github.dio.messageira.infraestruct.filaService.FIlaService;
 import com.github.dio.messageira.model.Paciente;
+import com.github.dio.messageira.model.PacienteEncapsuladoNaoRespondido;
 import com.github.dio.messageira.repository.PacienteRepository;
+import com.github.dio.messageira.service.WhatsappService;
 import it.auties.whatsapp.api.Whatsapp;
 import it.auties.whatsapp.listener.Listener;
 import it.auties.whatsapp.listener.RegisterListener;
@@ -10,145 +12,144 @@ import it.auties.whatsapp.model.info.MessageInfo;
 import it.auties.whatsapp.model.jid.Jid;
 import it.auties.whatsapp.model.message.model.Message;
 import it.auties.whatsapp.model.message.standard.TextMessage;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.LinkedBlockingQueue;
 
 
 @RegisterListener
 @EnableAsync
 public class ListenerNovaMensagem implements Listener {
-    private EncapsuladoPacienteStatic encapsuladoPacienteStatic;
-    public static Set<String> uuidUnicoUsuarioSet = new ConcurrentSkipListSet();
+    private PacienteRP pacienteRPStatic;
+    public static final Set<String> uuidUnicoUsuarioSet = new ConcurrentSkipListSet();
+    private LinkedBlockingQueue<ListenerNovaMensagem> linkeBlockingQueueWhatsAppService;
+    private PacienteEncapsuladoNaoRespondido pacienteEncapsuladoNaoRespondido;
+
+
     private FIlaService filaService;
 
-    public ListenerNovaMensagem(String numeroUsuario, PacienteRepository pacienteRepository, Paciente paciente) {
-        this.encapsuladoPacienteStatic = new EncapsuladoPacienteStatic(numeroUsuario, paciente.getCodigo(), paciente);
-        this.filaService = new FIlaService(pacienteRepository);
+
+    public ListenerNovaMensagem(String numeroUsuario, PacienteRepository pacienteRepository,
+                                Paciente paciente, LinkedBlockingQueue<ListenerNovaMensagem> linkeBlockingQueueWhatsAppService ,  PacienteEncapsuladoNaoRespondido PacienteNaoRespondio , FIlaService filaService ) {
+
+        this.pacienteRPStatic = new PacienteRP(numeroUsuario, paciente.getCodigo(), paciente);
+        this.filaService = filaService ;
+        this.pacienteEncapsuladoNaoRespondido = PacienteNaoRespondio;
+        this.linkeBlockingQueueWhatsAppService = linkeBlockingQueueWhatsAppService;
+
+
     }
 
     public void onNewMessage(Whatsapp whatsapp, MessageInfo<?> info) {
         String mensagemUsuario = null;
         String jidNumeroUsuario = info.senderJid().toSimpleJid().toPhoneNumber();
-        if (jidNumeroUsuario.equals(this.encapsuladoPacienteStatic.getNumeroUsuario())) {
-            Message var6 = info.message().content();
-            if (var6 instanceof TextMessage) {
-                TextMessage textMessage = (TextMessage) var6;
+
+        if (jidNumeroUsuario.equals(this.pacienteRPStatic.getNumeroUsuario())) {
+            Message mensagem = info.message().content();
+            if (mensagem instanceof TextMessage) {
+                TextMessage textMessage = (TextMessage) mensagem;
                 mensagemUsuario = textMessage.text();
             }
 
-            var6 = info.message().content();
-            if (!(var6 instanceof TextMessage)) {
-                if (mensagemUsuario == null && jidNumeroUsuario.equals(this.encapsuladoPacienteStatic.getNumeroUsuario())) {
-                    whatsapp.sendMessage(Jid.of(this.encapsuladoPacienteStatic.getNumeroUsuario()), String.format("NÃO ACEITAMOS MENSAGENS DE ÁUDIO, FOTOS, VÍDEOS OU FIGURINHAS COMO OPÇÃO.%n%nPor favor, responda com:%n%nSIM (caso tenha interesse na consulta/exame).%n%nNÃO (caso não tenha interesse na consulta/exame)."));
+            mensagem = info.message().content();
+
+            if (!(mensagem instanceof TextMessage)) {
+                if (mensagemUsuario == null && jidNumeroUsuario.equals(this.pacienteRPStatic.getNumeroUsuario())) {
+                    whatsapp.sendMessage(Jid.of(this.pacienteRPStatic.getNumeroUsuario()), String.format("NÃO ACEITAMOS MENSAGENS DE ÁUDIO, FOTOS, VÍDEOS OU FIGURINHAS COMO OPÇÃO.%n%nPor favor, responda com:%n%nSIM (caso tenha interesse na consulta/exame).%n%nNÃO (caso não tenha interesse na consulta/exame)."));
                 }
-
-                this.encapsuladoPacienteStatic.setMotivoDesistencia(false);
+                this.pacienteRPStatic.setMotivoDesistencia(false);
             } else {
-                TextMessage textMessage = (TextMessage) var6;
-                if (this.encapsuladoPacienteStatic.getMotivoDesistencia() && info.message().content() instanceof TextMessage) {
+                TextMessage textMessage = (TextMessage) mensagem;
+                if (this.pacienteRPStatic.getMotivoDesistencia() && info.message().content() instanceof TextMessage) {
                     if (mensagemUsuario.matches("[a-zA-Z0-9 À-ÿ.,!?]+")) {
-                        whatsapp.sendMessage(Jid.of(this.encapsuladoPacienteStatic.getNumeroUsuario()), String.format("MOTIVO DA SUA DESISTÊNCIA : %S.%n%nMuito obrigado, o encaminhamento será arquivado e removido da fila.", mensagemUsuario));
-                        this.encapsuladoPacienteStatic.setMotivoDesistencia(false);
+                        whatsapp.sendMessage(Jid.of(this.pacienteRPStatic.getNumeroUsuario()), String.format("MOTIVO DA SUA DESISTÊNCIA : %S.%n%nMuito obrigado, o encaminhamento será arquivado e removido da fila.", mensagemUsuario));
+                        this.pacienteRPStatic.setMotivoDesistencia(false);
                         whatsapp.removeListener(this);
-                        if (!uuidUnicoUsuarioSet.contains(this.encapsuladoPacienteStatic.getUuidUnicoUsuario())) {
-                            uuidUnicoUsuarioSet.add(this.encapsuladoPacienteStatic.getUuidUnicoUsuario());
-                            this.filaService.excutarPersistencia(mensagemUsuario, this.encapsuladoPacienteStatic.getPaciente() , encapsuladoPacienteStatic.getNumeroUsuario());
-                        }
-
+                        removendoDaFila(mensagemUsuario, pacienteRPStatic);
+                        this.linkeBlockingQueueWhatsAppService.remove(this);
+                        WhatsappService.pacienteList.remove(pacienteEncapsuladoNaoRespondido);
+                        resetThis();
                         return;
                     }
 
-                    this.encapsuladoPacienteStatic.setMotivoDesistencia(false);
+                    this.pacienteRPStatic.setMotivoDesistencia(false);
                 }
 
-                if (!mensagemUsuario.equalsIgnoreCase("sim") && !mensagemUsuario.equalsIgnoreCase("nao") && !mensagemUsuario.equalsIgnoreCase("Não")) {
-                    whatsapp.sendMessage(Jid.of(this.encapsuladoPacienteStatic.getNumeroUsuario()), String.format("Por favor, responda com:%n%nSIM (caso tenha interesse na consulta/exame).%n%nNÃO (caso não tenha interesse na consulta/exame)."));
-                }
 
-                if (mensagemUsuario.equalsIgnoreCase("sim") || mensagemUsuario.equalsIgnoreCase("s")) {
-                    if (isFinalSemana()) {
-                        whatsapp.sendMessage(Jid.of(this.encapsuladoPacienteStatic.getNumeroUsuario()), String.format("Olá %S, Estamos felizes em saber que você tem interesse na consulta/exame: %S.%nEstá marcado.%n%nCompareça SEGUNDA-FEIRA entre o horário 08:00 as 14:00 com cartão SUS no setor de regulação da Secretaria de Saúde de vitória de santo antão.%n%nA data da consulta/exame só estará disponível no momento da entrega do seu comprovante de agendamento.%n%nAguardamos sua presença.%nAtenciosamente, Regulação de Saúde.", this.encapsuladoPacienteStatic.getPaciente().getNome(), this.encapsuladoPacienteStatic.getPaciente().getConsulta()));
-                        whatsapp.removeListener(this);
-                        if (!uuidUnicoUsuarioSet.contains(this.encapsuladoPacienteStatic.getUuidUnicoUsuario())) {
-                            uuidUnicoUsuarioSet.add(this.encapsuladoPacienteStatic.getUuidUnicoUsuario());
-                            this.filaService.excutarPersistencia("ACEITO", this.encapsuladoPacienteStatic.getPaciente() , this.encapsuladoPacienteStatic.getNumeroUsuario());
-                        }
-                    } else {
-                        whatsapp.sendMessage(Jid.of(this.encapsuladoPacienteStatic.getNumeroUsuario()), String.format("Olá %S, Estamos felizes em saber que você tem interesse na consulta/exame: %S.%nEstá marcado.%n%nCompareça AMANHÃ entre o horário 08:00 as 14:00 com cartão SUS no setor de regulação da Secretaria de Saúde de Vitória de Santo Antão.%n%nA data da consulta/exame só estará disponível no momento da entrega do seu comprovante de agendamento.%n%nAguardamos sua presença.%nAtenciosamente, Regulação de Saúde.", this.encapsuladoPacienteStatic.getPaciente().getNome(), this.encapsuladoPacienteStatic.getPaciente().getConsulta()));
-                        whatsapp.removeListener(this);
-                        if (!uuidUnicoUsuarioSet.contains(this.encapsuladoPacienteStatic.getUuidUnicoUsuario())) {
-                            uuidUnicoUsuarioSet.add(this.encapsuladoPacienteStatic.getUuidUnicoUsuario());
-                            this.filaService.excutarPersistencia("ACEITO", this.encapsuladoPacienteStatic.getPaciente() , encapsuladoPacienteStatic.getNumeroUsuario());
-                        }
-                    }
-                }
-
-                if (mensagemUsuario.equalsIgnoreCase("nao") || mensagemUsuario.equalsIgnoreCase("não") || mensagemUsuario.equalsIgnoreCase("naõ") || mensagemUsuario.equalsIgnoreCase("ñ")) {
-                    whatsapp.sendMessage(Jid.of(this.encapsuladoPacienteStatic.getNumeroUsuario()), "Coloque o motivo da desistência abaixo...");
-                    this.encapsuladoPacienteStatic.setMotivoDesistencia(true);
-                }
-
+                isRespostaValida(whatsapp, mensagemUsuario);
+                isSim(whatsapp, mensagemUsuario);
+                isNao(whatsapp, mensagemUsuario);
             }
         }
     }
+
+
+
+
+
+    private void isRespostaValida(Whatsapp whatsapp, String mensagemUsuario) {
+        if (!mensagemUsuario.equalsIgnoreCase("sim") && !mensagemUsuario.equalsIgnoreCase("nao") && !mensagemUsuario.equalsIgnoreCase("Não")) {
+            whatsapp.sendMessage(Jid.of(this.pacienteRPStatic.getNumeroUsuario()), String.format("Por favor, responda com:%n%nSIM (caso tenha interesse na consulta/exame).%n%nNÃO (caso não tenha interesse na consulta/exame)."));
+        }
+    }
+
+
+    private void isSim(Whatsapp whatsapp, String mensagemUsuario) {
+        if (mensagemUsuario.equalsIgnoreCase("sim") || mensagemUsuario.equalsIgnoreCase("s")) {
+            if (isFinalSemana()) {
+                whatsapp.sendMessage(Jid.of(this.pacienteRPStatic.getNumeroUsuario()), String.format("Olá %S, Estamos felizes em saber que você tem interesse na consulta/exame: %S.%nEstá marcado.%n%nCompareça SEGUNDA-FEIRA entre o horário 08:00 as 14:00 com cartão SUS no setor de regulação da Secretaria de Saúde de vitória de santo antão.%n%nA data da consulta/exame só estará disponível no momento da entrega do seu comprovante de agendamento.%n%nAguardamos sua presença.%nAtenciosamente, Regulação de Saúde.", this.pacienteRPStatic.getPaciente().getNome(), this.pacienteRPStatic.getPaciente().getConsulta()));
+                whatsapp.removeListener(this);
+                removendoDaFila("ACEITO", this.pacienteRPStatic);
+                this.linkeBlockingQueueWhatsAppService.remove(this);
+                WhatsappService.pacienteList.remove(pacienteEncapsuladoNaoRespondido);
+                resetThis();
+            } else {
+                whatsapp.sendMessage(Jid.of(this.pacienteRPStatic.getNumeroUsuario()), String.format("Olá %S, Estamos felizes em saber que você tem interesse na consulta/exame: %S.%nEstá marcado.%n%nCompareça AMANHÃ entre o horário 08:00 as 14:00 com cartão SUS no setor de regulação da Secretaria de Saúde de Vitória de Santo Antão.%n%nA data da consulta/exame só estará disponível no momento da entrega do seu comprovante de agendamento.%n%nAguardamos sua presença.%nAtenciosamente, Regulação de Saúde.", this.pacienteRPStatic.getPaciente().getNome(), this.pacienteRPStatic.getPaciente().getConsulta()));
+                whatsapp.removeListener(this);
+                removendoDaFila("ACEITO", pacienteRPStatic);
+                this.linkeBlockingQueueWhatsAppService.remove(this);
+                WhatsappService.pacienteList.remove(pacienteEncapsuladoNaoRespondido);
+                resetThis();
+            }
+        }
+    }
+
+    private void isNao(Whatsapp whatsapp, String mensagemUsuario) {
+        if (mensagemUsuario.equalsIgnoreCase("nao") || mensagemUsuario.equalsIgnoreCase("não") || mensagemUsuario.equalsIgnoreCase("naõ") || mensagemUsuario.equalsIgnoreCase("ñ")) {
+            whatsapp.sendMessage(Jid.of(this.pacienteRPStatic.getNumeroUsuario()), "Coloque o motivo da desistência abaixo...");
+            this.pacienteRPStatic.setMotivoDesistencia(true);
+        }
+    }
+
+
+    private void removendoDaFila(String resposta, PacienteRP pacienteRPStatic) {
+        if (!uuidUnicoUsuarioSet.contains(this.pacienteRPStatic.getUuidUnicoUsuario())) {
+            uuidUnicoUsuarioSet.add(this.pacienteRPStatic.getUuidUnicoUsuario());
+            this.filaService.excutarPersistencia(resposta, this.pacienteRPStatic.getPaciente(), pacienteRPStatic.getNumeroUsuario());
+        }
+    }
+
 
     private static boolean isFinalSemana() {
         LocalDate data = LocalDate.now(ZoneId.of("America/Recife")).plusDays(1L);
         return data.getDayOfWeek().toString().equalsIgnoreCase(DayOfWeek.SATURDAY.toString()) || data.getDayOfWeek().toString().equalsIgnoreCase(DayOfWeek.SUNDAY.toString());
     }
-}
 
 
-class EncapsuladoPaciente {
-    private String numeroUsuario;
-    private Boolean motivoDesistencia = false;
-    private String uuidUnicoUsuario;
-    private Paciente paciente;
+    public void resetThis() {
+        this.pacienteRPStatic = null;
+        this.filaService = null;
+        this.pacienteEncapsuladoNaoRespondido = null;
+        this.linkeBlockingQueueWhatsAppService = null;
 
-    public EncapsuladoPaciente(String numeroUsuario, String uuidUnicoUsuario, Paciente paciente) {
-        this.numeroUsuario = "+" + numeroUsuario;
-        this.uuidUnicoUsuario = uuidUnicoUsuario;
-        this.paciente = paciente;
     }
-
-    public String getNumeroUsuario() {
-        return this.numeroUsuario;
-    }
-
-    public void setNumeroUsuario(String numeroUsuario) {
-        this.numeroUsuario = numeroUsuario;
-    }
-
-    public Boolean getMotivoDesistencia() {
-        return this.motivoDesistencia;
-    }
-
-    public void setMotivoDesistencia(Boolean motivoDesistencia) {
-        this.motivoDesistencia = motivoDesistencia;
-    }
-
-    public String getUuidUnicoUsuario() {
-        return this.uuidUnicoUsuario;
-    }
-
-    public void setUuidUnicoUsuario(String uuidUnicoUsuario) {
-        this.uuidUnicoUsuario = uuidUnicoUsuario;
-    }
-
-    public Paciente getPaciente() {
-        return this.paciente;
-    }
-
-    public void setPaciente(Paciente paciente) {
-        this.paciente = paciente;
-    }
-
-
 
 }
 

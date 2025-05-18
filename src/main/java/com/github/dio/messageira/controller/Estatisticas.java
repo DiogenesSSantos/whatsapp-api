@@ -3,7 +3,7 @@ package com.github.dio.messageira.controller;
 
 import com.github.dio.messageira.infraestruct.assembler.AssembleFiltro;
 import com.github.dio.messageira.infraestruct.reports.PdfMarcacoesReports;
-import com.github.dio.messageira.model.Filtro;
+import com.github.dio.messageira.model.FiltroPaciente;
 import com.github.dio.messageira.model.Paciente;
 import com.github.dio.messageira.repository.PacienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,14 +25,14 @@ public class Estatisticas {
 
     @GetMapping
     public ResponseEntity<?> consultar(@RequestParam(required = false) String nome, @RequestParam(required = false) String bairro, @RequestParam(required = false) String dataMarcacaoInicial, @RequestParam(required = false) String dataMarcacaoFinal, @RequestParam(required = false) String consulta, @RequestParam(required = false) String motivo) {
-        Filtro filtro = AssembleFiltro.criandoFiltro(nome, bairro, dataMarcacaoInicial, dataMarcacaoFinal, consulta, motivo);
+        FiltroPaciente filtroPaciente = AssembleFiltro.criandoFiltro(nome, bairro, dataMarcacaoInicial, dataMarcacaoFinal, consulta, motivo);
         List<Paciente> pacienteList = null;
-        if (filtro == null) {
+        if (filtroPaciente == null) {
             pacienteList = this.pacienteRepository.findAll();
             pacienteList.sort(Comparator.naturalOrder());
             return ResponseEntity.ok().body(pacienteList);
         } else {
-            return ResponseEntity.ok().body(this.pacienteRepository.filtrar(filtro));
+            return ResponseEntity.ok().body(this.pacienteRepository.filtrar(filtroPaciente));
         }
     }
 
@@ -42,8 +42,8 @@ public class Estatisticas {
             method = {RequestMethod.GET}
     )
     public ResponseEntity<byte[]> imprimiPDF(@RequestParam(required = false) String nome, @RequestParam(required = false) String bairro, @RequestParam(required = false) String dataMarcacaoInicial, @RequestParam(required = false) String dataMarcacaoFinal, @RequestParam(required = false) String consulta, @RequestParam(required = false) String motivo) {
-        Filtro filtro = AssembleFiltro.criandoFiltro(nome, bairro, dataMarcacaoInicial, dataMarcacaoFinal, consulta, motivo);
-        byte[] pdfBuscado = this.pdfMarcacoesReportsService.emitirPDF(filtro);
+        FiltroPaciente filtroPaciente = AssembleFiltro.criandoFiltro(nome, bairro, dataMarcacaoInicial, dataMarcacaoFinal, consulta, motivo);
+        byte[] pdfBuscado = this.pdfMarcacoesReportsService.emitirPDF(filtroPaciente);
         HttpHeaders heards = new HttpHeaders();
         heards.add("Content-Disposition", "attachment; filename=marcacoes-diarias.pdf");
         return ((ResponseEntity.BodyBuilder)ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).headers(heards)).body(pdfBuscado);

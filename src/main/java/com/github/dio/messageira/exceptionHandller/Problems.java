@@ -1,4 +1,4 @@
-package com.github.dio.messageira.exceptioHandller;
+package com.github.dio.messageira.exceptionHandller;
 
 import lombok.Builder;
 import lombok.Getter;

@@ -1,6 +1,6 @@
 package com.github.dio.messageira.infraestruct.assembler;
 
-import com.github.dio.messageira.model.Filtro;
+import com.github.dio.messageira.model.FiltroPaciente;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -13,9 +13,9 @@ import java.time.format.DateTimeFormatter;
 public class AssembleFiltro {
     private static final Logger log = LoggerFactory.getLogger(AssembleFiltro.class);
 
-    public static Filtro criandoFiltro(String nome, String bairro, String dataMarcacaoIncial, String dataMarcacaoFinal, String consulta, String motivo) {
+    public static FiltroPaciente criandoFiltro(String nome, String bairro, String dataMarcacaoIncial, String dataMarcacaoFinal, String consulta, String motivo) {
         if (nome == null && bairro == null && dataMarcacaoIncial == null && dataMarcacaoFinal == null && consulta == null && motivo == null) {
-            log.warn("ENTROU NA CONDIÇÃO NULL DO ASSEMBLER");
+            log.warn("ENTROU NA CONDIÇÃO NULL NO FILTRO DE PESQUISA");
             return null;
         } else {
             LocalDateTime dataInicialFormatada = null;
@@ -28,7 +28,7 @@ public class AssembleFiltro {
                 dataFinalFormatada = formataData(dataMarcacaoFinal);
             }
 
-            return new Filtro(nome, bairro, dataInicialFormatada, dataFinalFormatada, consulta, motivo);
+            return new FiltroPaciente(nome, bairro, dataInicialFormatada, dataFinalFormatada, consulta, motivo);
         }
     }
 

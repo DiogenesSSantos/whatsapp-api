@@ -1,13 +1,12 @@
 package com.github.dio.messageira.repository;
 
-import com.github.dio.messageira.model.Filtro;
+import com.github.dio.messageira.model.FiltroPaciente;
 import com.github.dio.messageira.model.Paciente;
 import jakarta.persistence.*;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-import org.hibernate.query.criteria.spi.CriteriaBuilderExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,33 +21,33 @@ public class PacienteRepositoryImpl implements PacienteRepositoryCustomSQL {
     @Autowired
     private EntityManager entityManager;
 
-    public List<Paciente> filtrar(Filtro filtro) {
+    public List<Paciente> filtrar(FiltroPaciente filtroPaciente) {
         CriteriaBuilder builder = this.entityManager.getCriteriaBuilder();
         CriteriaQuery<Paciente> querry = builder.createQuery(Paciente.class);
         Root<Paciente> root = querry.from(Paciente.class);
         List<Predicate> predicates = new ArrayList();
-        if (filtro.getNome() != null) {
-            predicates.add(builder.like(root.get("nome"), filtro.getNome() + "%"));
+        if (filtroPaciente.getNome() != null) {
+            predicates.add(builder.like(root.get("nome"), filtroPaciente.getNome() + "%"));
         }
 
-        if (filtro.getBairro() != null) {
-            predicates.add(builder.like(root.get("bairro"), filtro.getBairro() + "%"));
+        if (filtroPaciente.getBairro() != null) {
+            predicates.add(builder.like(root.get("bairro"), filtroPaciente.getBairro() + "%"));
         }
 
-        if (filtro.getDataMarcacaoInicial() != null) {
-            predicates.add(builder.greaterThanOrEqualTo(root.get("dataMarcacao"), filtro.getDataMarcacaoInicial()));
+        if (filtroPaciente.getDataMarcacaoInicial() != null) {
+            predicates.add(builder.greaterThanOrEqualTo(root.get("dataMarcacao"), filtroPaciente.getDataMarcacaoInicial()));
         }
 
-        if (filtro.getDataMarcacaoFinal() != null) {
-            predicates.add(builder.lessThanOrEqualTo(root.get("dataMarcacao"), filtro.getDataMarcacaoFinal()));
+        if (filtroPaciente.getDataMarcacaoFinal() != null) {
+            predicates.add(builder.lessThanOrEqualTo(root.get("dataMarcacao"), filtroPaciente.getDataMarcacaoFinal()));
         }
 
-        if (filtro.getTipoConsulta() != null) {
-            predicates.add(builder.like(root.get("consulta"), filtro.getTipoConsulta() + "%"));
+        if (filtroPaciente.getTipoConsulta() != null) {
+            predicates.add(builder.like(root.get("consulta"), filtroPaciente.getTipoConsulta() + "%"));
         }
 
-        if (filtro.getMotivo() != null) {
-            predicates.add(builder.and(new Predicate[]{builder.equal(root.get("motivo"), filtro.getMotivo())}));
+        if (filtroPaciente.getMotivo() != null) {
+            predicates.add(builder.and(new Predicate[]{builder.equal(root.get("motivo"), filtroPaciente.getMotivo())}));
         }
 
         querry.where((Predicate[])predicates.toArray(new Predicate[0]));
