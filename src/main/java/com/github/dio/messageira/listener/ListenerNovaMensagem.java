@@ -7,26 +7,22 @@ import com.github.dio.messageira.repository.PacienteRepository;
 import com.github.dio.messageira.service.WhatsappService;
 import it.auties.whatsapp.api.Whatsapp;
 import it.auties.whatsapp.listener.Listener;
-import it.auties.whatsapp.listener.RegisterListener;
 import it.auties.whatsapp.model.info.MessageInfo;
 import it.auties.whatsapp.model.jid.Jid;
 import it.auties.whatsapp.model.message.model.Message;
 import it.auties.whatsapp.model.message.standard.TextMessage;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.LinkedBlockingQueue;
 
 
-@RegisterListener
 @EnableAsync
-public class ListenerNovaMensagem implements Listener {
+public class ListenerNovaMensagem implements Listener{
     private PacienteRP pacienteRPStatic;
     public static final Set<String> uuidUnicoUsuarioSet = new ConcurrentSkipListSet();
     private LinkedBlockingQueue<ListenerNovaMensagem> linkeBlockingQueueWhatsAppService;
@@ -48,8 +44,10 @@ public class ListenerNovaMensagem implements Listener {
     }
 
     public void onNewMessage(Whatsapp whatsapp, MessageInfo<?> info) {
+
+
         String mensagemUsuario = null;
-        String jidNumeroUsuario = info.senderJid().toSimpleJid().toPhoneNumber();
+        String jidNumeroUsuario = info.senderJid().toSimpleJid().toPhoneNumber().get();
 
         if (jidNumeroUsuario.equals(this.pacienteRPStatic.getNumeroUsuario())) {
             Message mensagem = info.message().content();

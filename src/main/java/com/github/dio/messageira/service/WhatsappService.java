@@ -8,11 +8,10 @@ import com.github.dio.messageira.listener.ListenerNovaMensagem;
 import com.github.dio.messageira.model.Paciente;
 import com.github.dio.messageira.model.PacienteEncapsuladoNaoRespondido;
 import com.github.dio.messageira.repository.PacienteRepository;
-import it.auties.whatsapp.api.MediaProxySetting;
-import it.auties.whatsapp.api.TextPreviewSetting;
-import it.auties.whatsapp.api.WebHistoryLength;
 import it.auties.whatsapp.api.Whatsapp;
+import it.auties.whatsapp.model.companion.CompanionDevice;
 import it.auties.whatsapp.model.jid.Jid;
+import it.auties.whatsapp.model.signal.auth.Version;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +19,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.*;
 
 
@@ -28,8 +33,18 @@ import java.util.concurrent.*;
 public class WhatsappService {
 
     private static final Logger log = LoggerFactory.getLogger(com.github.dio.messageira.service.WhatsappService.class);
-    public static final String NAO_RESPONDIDA_MSG_PADRÃO = "Como não recebemos sua resposta dentro do prazo de 24 horas, " +
-            "seu comprovante de agendamento será encaminhado para a Unidade Básica de Saúde (Posto de Saúde) do seu bairro.";
+    public static final String NAO_RESPONDIDA_MSG_PADRÃO = "Informamos que o prazo de 48 horas para a retirada do comprovante de agendamento expirou. " +
+            "Se você já retirou o seu comprovante, por favor, desconsidere este aviso. Caso contrário, " +
+            "seu comprovante será encaminhado para a Unidade Básica de Saúde (Posto de Saúde) do seu " +
+            "bairro e estará disponível para retirada em até 24 horas a partir do recebimento desta mensagem.\n\n" +
+            "Atenciosamente, Regulação de Saúde.";
+
+    public static final String NAO_RESPONDIDA_MSG_PADRÃO_FINAL_SEMANA = "Informamos que o prazo de 48 horas para a retirada do comprovante de agendamento expirou. " +
+            "Se você já retirou o seu comprovante, por favor, desconsidere este aviso. Caso contrário, " +
+            "seu comprovante será encaminhado para a Unidade Básica de Saúde (Posto de Saúde) do seu " +
+            "bairro e estará disponível para retirada nessa proxima terça feira.\n\n" +
+            "Atenciosamente, Regulação de Saúde.";
+
 
     @Autowired
     private FIlaService filaService;
@@ -40,6 +55,7 @@ public class WhatsappService {
     private static Set<String> pacienteSetStringUUID = new ConcurrentSkipListSet<>();
     private static CompletableFuture<Whatsapp> whatsappFuture;
     public static final List<PacienteEncapsuladoNaoRespondido> pacienteList = new LinkedList<>();
+
 
     private String qrCode;
     private Boolean isDisconnecting = true;
@@ -56,15 +72,12 @@ public class WhatsappService {
     public void init() {
         whatsappFuture = new CompletableFuture<>();
 
+        ;
 
-        Whatsapp.webBuilder()
-                .firstConnection()
+
+        Whatsapp whatsapp = Whatsapp.webBuilder()
+                .newConnection()
                 .name("CMCE LOGIN NÃO DESCONECTE")
-                .mediaProxySetting(MediaProxySetting.NONE)
-                .automaticMessageReceipts(false)
-                .textPreviewSetting(TextPreviewSetting.DISABLED)
-                .historyLength(WebHistoryLength.zero())
-                .autodetectListeners(true)
                 .unregistered(qrCode -> {
                     System.out.println("QRCodeRecebido");
                     this.qrCode = qrCode;
@@ -79,9 +92,10 @@ public class WhatsappService {
                 .addDisconnectedListener(reason -> {
                     whatsappFuture = new CompletableFuture<>();
                     System.out.printf("disconectado: %s%n", reason);
-                })
-                .connect();
+                });
 
+        whatsapp.store().setDevice(CompanionDevice.web(Version.of("2.3000.1023231279")));
+        whatsapp.connect();
 
     }
 
@@ -169,15 +183,18 @@ public class WhatsappService {
                     System.out.println("Enviando mensagem para: " + numero);
 
 
-                    String mensagem1 = String.format(
-                            "Olá %S , somos da Secretária de saúde de Vitoria de Santo Antão.%n%n" +
-                                    "Estamos felizes em informá-lo sobre sua consulta ou exame: %n%S.%n%n" +
-                                    "Gostaríamos de saber se você ainda tem interesse.%n%n" +
-                                    "Por favor, responda SIM se estiver interessado, ou NÃO se não estiver. Caso não possua interesse, pedimos gentilmente que forneça sua justificativa..%n%n" +
-                                    "Aguardamos sua resposta.%nAtenciosamente, Regulação de saúde."
-                            , pacienteMR.getNome(), pacienteMR.getConsulta());
+                    String mensagem = String.format(
+                            "Olá %S!%n%n" +
+                                    "Somos da Secretaria de Saúde de Vitória de Santo Antão.%n" +
+                                    "Temos o prazer de informá-lo sobre a sua consulta ou exame:%n%S.%n%n" +
+                                    "Ao receber esta mensagem, por favor, responda com 'SIM' se você tem interesse na consulta ou exame, ou 'NÃO' caso contrário.%n" +
+                                    "Informamos que aguardaremos sua resposta por 48 horas.%n%n" +
+                                    "Atenciosamente,%n" +
+                                    "Regulação de Saúde.",
+                            pacienteMR.getNome(), pacienteMR.getConsulta());
 
-                    whatsapp.sendMessage(contactJid, mensagem1).thenRun(() -> {
+
+                    whatsapp.sendMessage(contactJid, mensagem).thenRun(() -> {
                         System.out.println("Mensagem enviada para: " + numero);
                     }).exceptionally(ex -> {
                         System.err.println("Erro ao enviar mensagem: " + ex.getMessage());
@@ -185,7 +202,6 @@ public class WhatsappService {
                         return null;
                     });
                 } else {
-
                     salvandoNaoPossuiWhatsapp(pacienteMR);
                 }
             } catch (Exception e) {
@@ -270,7 +286,7 @@ public class WhatsappService {
     }
 
 
-    @Scheduled(fixedRate = 45000)
+    @Scheduled(fixedRate = 60000)
     public void verificarConexao() throws InterruptedException {
         System.gc();
         TimeUnit.SECONDS.sleep(15);
@@ -314,8 +330,15 @@ public class WhatsappService {
                             salvandoNaoRespondido(paciente.getPaciente());
                             try {
                                 TimeUnit.SECONDS.sleep(10);
+
+                                if (isFinalSemana()) {
+                                    whatsappFuture.get().sendMessage(paciente.getNumero(),
+                                            NAO_RESPONDIDA_MSG_PADRÃO_FINAL_SEMANA);
+                                    return;
+                                }
                                 whatsappFuture.get().sendMessage(paciente.getNumero(),
                                         NAO_RESPONDIDA_MSG_PADRÃO);
+
                             } catch (InterruptedException e) {
                                 throw new RuntimeException(e);
                             } catch (ExecutionException e) {
@@ -334,9 +357,18 @@ public class WhatsappService {
         };
 
 
-
-        scheduledExecutorService.scheduleAtFixedRate(runnable, 12, 24, TimeUnit.HOURS);
+        scheduledExecutorService.scheduleAtFixedRate(runnable, 12, 48, TimeUnit.HOURS);
     }
+
+
+    private static boolean isFinalSemana() {
+        LocalDate data = LocalDate.now(ZoneId.of("America/Recife"));
+        return data.getDayOfWeek().toString().equalsIgnoreCase(DayOfWeek.SATURDAY.toString())
+                || data.getDayOfWeek().toString().equalsIgnoreCase(DayOfWeek.SUNDAY.toString())
+                || data.getDayOfWeek().toString().equalsIgnoreCase(DayOfWeek.FRIDAY.toString());
+    }
+
+
 }
 
 
