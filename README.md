@@ -16,18 +16,17 @@ Esta API foi criada para integrar o canal de comunicação via WhatsApp com os s
 
 ## Tecnologias Utilizadas
 
-- **Backend:** Possivelmente Node.js com Express (substitua conforme sua stack)
+- **Backend:** JAVA
 - **Banco de Dados:** MongoDB, MySQL ou outro SGBD de sua escolha
-- **Integração WhatsApp:** Utilização de API oficial ou de soluções de terceiros para envio de mensagens (ex: Twilio, Zenvia, etc.)
-- **Autenticação:** JWT ou outro método robusto para controle de acesso
+- **Integração WhatsApp:** Utilizando a biblioteca do autiesCobalt
+- **Autenticação:** JWT ou outro método robusto para controle de acesso // AINDA VAI SER IMPLEMENTADO
 
 > *Ajuste essas tecnologias conforme a implementação real do projeto.*
 
 ## Requisitos
 
-- **Node.js:** Versão 14 ou superior (ou a versão compatível com seu projeto)
-- **Gerenciador de Pacotes:** NPM ou Yarn
-- **Conexão com a API do WhatsApp:** Configuração das credenciais e tokens necessários
+- **Java:** Versão 17 ou superior (ou a versão compatível com seu projeto)
+- **Conexão com a API do WhatsApp:** Configuração das credenciais e tokens necessários (ainda vai ser implementado)
 - **Banco de Dados:** Sistema de armazenamento devidamente configurado e conectado
 
 ## Instalação
@@ -35,4 +34,6 @@ Esta API foi criada para integrar o canal de comunicação via WhatsApp com os s
 1. **Clone o repositório:**
 
    ```bash
-  git clone https://github.com/seuusuario/whatsappApi.git](https://github.com/DiogenesSSantos/whatsappApi.git
+   git clone https://github.com/seuusuario/whatsappApi.git](https://github.com/seuusuario/whatsappApi.git](https://github.com/DiogenesSSantos/whatsappApi.git
+
+  git clone 
