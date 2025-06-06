@@ -34,6 +34,6 @@ Esta API foi criada para integrar o canal de comunicação via WhatsApp com os s
 1. **Clone o repositório:**
 
    ```bash
-   git clone https://github.com/seuusuario/whatsappApi.git](https://github.com/seuusuario/whatsappApi.git](https://github.com/DiogenesSSantos/whatsappApi.git
+   git clone https://github.com/DiogenesSSantos/whatsappApi.git
 
   git clone 
