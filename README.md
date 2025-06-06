@@ -17,6 +17,7 @@ Esta API foi criada para integrar o canal de comunicação via WhatsApp com os s
 ## Tecnologias Utilizadas
 
 - **Backend:** JAVA
+- **Front-end:** Html,css,javaScript (Desenvolvido por -> https://github.com/LuaMoreiraa)
 - **Banco de Dados:** MongoDB, MySQL ou outro SGBD de sua escolha
 - **Integração WhatsApp:** Utilizando a biblioteca do autiesCobalt
 - **Autenticação:** JWT ou outro método robusto para controle de acesso // AINDA VAI SER IMPLEMENTADO
