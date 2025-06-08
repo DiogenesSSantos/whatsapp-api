@@ -3,11 +3,13 @@ package com.github.dio.messageira.service;
 
 
 import com.github.dio.messageira.controller.modeloRepresentacional.PacienteMR;
+import com.github.dio.messageira.infraestruct.assembler.AssemblerPaciente;
 import com.github.dio.messageira.infraestruct.filaService.FIlaService;
 import com.github.dio.messageira.listener.ListenerNovaMensagem;
 import com.github.dio.messageira.model.Paciente;
 import com.github.dio.messageira.model.PacienteEncapsuladoNaoRespondido;
 import com.github.dio.messageira.repository.PacienteRepository;
+
 import it.auties.whatsapp.api.Whatsapp;
 import it.auties.whatsapp.model.companion.CompanionDevice;
 import it.auties.whatsapp.model.jid.Jid;
@@ -22,10 +24,7 @@ import org.springframework.stereotype.Service;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
 
 
@@ -45,11 +44,6 @@ public class WhatsappService {
             "bairro e estará disponível para retirada nessa proxima terça feira.\n\n" +
             "Atenciosamente, Regulação de Saúde.";
 
-
-    @Autowired
-    private FIlaService filaService;
-
-
     private static final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     private static final LinkedBlockingQueue<ListenerNovaMensagem> queue = new LinkedBlockingQueue<>(250);
     private static Set<String> pacienteSetStringUUID = new ConcurrentSkipListSet<>();
@@ -57,6 +51,8 @@ public class WhatsappService {
     public static final List<PacienteEncapsuladoNaoRespondido> pacienteList = new LinkedList<>();
 
 
+    @Autowired
+    private FIlaService filaService;
     private String qrCode;
     private Boolean isDisconnecting = true;
     private PacienteRepository pacienteRepository;
@@ -72,19 +68,16 @@ public class WhatsappService {
     public void init() {
         whatsappFuture = new CompletableFuture<>();
 
-        ;
-
 
         Whatsapp whatsapp = Whatsapp.webBuilder()
-                .newConnection()
-                .name("CMCE LOGIN NÃO DESCONECTE")
+                .lastConnection()
+                .name("TESTE LOCAL")
                 .unregistered(qrCode -> {
                     System.out.println("QRCodeRecebido");
                     this.qrCode = qrCode;
 
                 })
                 .addLoggedInListener(api -> {
-                    whatsappFuture.complete(api);
                     System.out.printf("conectado: %s%n", api.store().privacySettings());
                     isDisconnecting = false;
 
@@ -96,12 +89,19 @@ public class WhatsappService {
 
         whatsapp.store().setDevice(CompanionDevice.web(Version.of("2.3000.1023231279")));
         whatsapp.connect();
+        whatsappFuture.complete(whatsapp);
+        recuperandoListenerNovaMensagem(whatsappFuture);
 
     }
+
 
     @PostConstruct
     public void executeThreadLimpezaMemoria() {
         limpandoListLinkedWhatsappListener();
+    }
+
+    public String getQrCode() {
+        return qrCode;
     }
 
 
@@ -133,10 +133,6 @@ public class WhatsappService {
         } catch (Exception e) {
             new RuntimeException("ALGUMA ERRO NA APLICAÇÃO");
         }
-    }
-
-    public String getQrCode() {
-        return qrCode;
     }
 
 
@@ -217,7 +213,7 @@ public class WhatsappService {
 
     private Paciente salvandoIncialmenteAguardando(PacienteMR pacienteMR) {
         var pacienteBdExiste = pacienteRepository.findBycodigo(pacienteMR.getId().toString());
-        var paciente = disassembleToObject(pacienteMR);
+        var paciente = AssemblerPaciente.disassembleToObject(pacienteMR);
 
 
         if (pacienteBdExiste == null) {
@@ -242,7 +238,7 @@ public class WhatsappService {
         var pacienteExiste = pacienteRepository.findBycodigo(pacienteMR.getId().toString());
 
         if (pacienteExiste == null) {
-            var paciente = disassembleToObjectNaoPossuiWhatsapp(pacienteMR);
+            var paciente = AssemblerPaciente.disassembleToObjectNaoPossuiWhatsapp(pacienteMR);
             pacienteRepository.save(paciente);
         }
     }
@@ -257,37 +253,9 @@ public class WhatsappService {
     }
 
 
-    /*
-        Método para converte o modelo representacional (Input de dados)
-        no entity que vai ser persistido no banco de dados
-     */
-    private static Paciente disassembleToObject(PacienteMR pacienteMR) {
-        var paciente = new Paciente();
-        paciente.setCodigo(pacienteMR.getId().toString());
-        paciente.setNome(pacienteMR.getNome());
-        paciente.setNumero(pacienteMR.getNumeros().getFirst());
-        paciente.setConsulta(pacienteMR.getConsulta());
-        paciente.setDataConsulta(pacienteMR.getData());
-        paciente.setMotivo("AGUARDANDO");
-        paciente.setBairro(pacienteMR.getBairro());
-        return paciente;
-    }
-
-    private static Paciente disassembleToObjectNaoPossuiWhatsapp(PacienteMR pacienteMR) {
-        var paciente = new Paciente();
-        paciente.setCodigo(pacienteMR.getId().toString());
-        paciente.setNome(pacienteMR.getNome());
-        paciente.setNumero("NUMERO NAO EXISTE WHATSAPP");
-        paciente.setConsulta(pacienteMR.getConsulta());
-        paciente.setDataConsulta(pacienteMR.getData());
-        paciente.setMotivo("Nao_Possui_Whatsapp");
-        paciente.setBairro(pacienteMR.getBairro());
-        return paciente;
-    }
-
-
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(initialDelay = 120000L, fixedDelay = 30000L)
     public void verificarConexao() throws InterruptedException {
+        System.out.println("LIMPEZA DO GABBERGER COLLECTION");
         System.gc();
         TimeUnit.SECONDS.sleep(15);
         Whatsapp whatsapp = whatsappFuture.getNow(null);
@@ -302,8 +270,32 @@ public class WhatsappService {
     }
 
 
-    public void limpandoListLinkedWhatsappListener() {
+    private static boolean isFinalSemana() {
+        LocalDate data = LocalDate.now(ZoneId.of("America/Recife"));
+        return data.getDayOfWeek().toString().equalsIgnoreCase(DayOfWeek.SATURDAY.toString())
+                || data.getDayOfWeek().toString().equalsIgnoreCase(DayOfWeek.SUNDAY.toString())
+                || data.getDayOfWeek().toString().equalsIgnoreCase(DayOfWeek.FRIDAY.toString());
+    }
 
+
+    private void recuperandoListenerNovaMensagem(CompletableFuture<Whatsapp> whatsappFuture) {
+        Iterator<ListenerNovaMensagem> iterator = queue.iterator();
+
+        while (iterator.hasNext()) {
+            try {
+                whatsappFuture.get().addListener(iterator.next());
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+
+    }
+
+
+    public void limpandoListLinkedWhatsappListener() {
         Runnable runnable = () -> {
             if (queue.isEmpty()) {
                 log.warn("___FILA LISTENER VAZIA___");
@@ -357,15 +349,7 @@ public class WhatsappService {
         };
 
 
-        scheduledExecutorService.scheduleAtFixedRate(runnable, 12, 48, TimeUnit.HOURS);
-    }
-
-
-    private static boolean isFinalSemana() {
-        LocalDate data = LocalDate.now(ZoneId.of("America/Recife"));
-        return data.getDayOfWeek().toString().equalsIgnoreCase(DayOfWeek.SATURDAY.toString())
-                || data.getDayOfWeek().toString().equalsIgnoreCase(DayOfWeek.SUNDAY.toString())
-                || data.getDayOfWeek().toString().equalsIgnoreCase(DayOfWeek.FRIDAY.toString());
+        scheduledExecutorService.scheduleAtFixedRate(runnable, 40, 60, TimeUnit.SECONDS);
     }
 
 

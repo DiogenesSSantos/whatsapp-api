@@ -31,6 +31,9 @@ public class ListenerNovaMensagem implements Listener{
 
     private FIlaService filaService;
 
+    public ListenerNovaMensagem(){
+
+    }
 
     public ListenerNovaMensagem(String numeroUsuario, PacienteRepository pacienteRepository,
                                 Paciente paciente, LinkedBlockingQueue<ListenerNovaMensagem> linkeBlockingQueueWhatsAppService ,  PacienteEncapsuladoNaoRespondido PacienteNaoRespondio , FIlaService filaService ) {
@@ -47,8 +50,8 @@ public class ListenerNovaMensagem implements Listener{
 
 
         String mensagemUsuario = null;
-        String jidNumeroUsuario = info.senderJid().toSimpleJid().toPhoneNumber().get();
-
+//        String jidNumeroUsuario = info.senderJid().toSimpleJid().toPhoneNumber().get();
+        String jidNumeroUsuario = "+"+info.senderJid().toJid().user();
         if (jidNumeroUsuario.equals(this.pacienteRPStatic.getNumeroUsuario())) {
             Message mensagem = info.message().content();
             if (mensagem instanceof TextMessage) {
