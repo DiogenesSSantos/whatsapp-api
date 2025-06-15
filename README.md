@@ -4,7 +4,9 @@ Projeto desenvolvido para auxiliar na comunicação entre o paciente e a Regula�
 
 ## Descrição
 
-Esta API foi criada para integrar o canal de comunicação via WhatsApp com os sistemas de agendamento da Regulação de Saúde. A proposta é melhorar o fluxo de informações, permitindo que pacientes recebam notificações, lembretes e possam até mesmo confirmar ou reagendar compromissos diretamente pelo aplicativo. Essa abordagem visa reduzir faltas, otimizar processos e trazer mais agilidade na troca de informações entre os envolvidos.
+Esta API foi criada para integrar o canal de comunicação via WhatsApp com os sistemas de agendamento da Regulação de Saúde. A proposta é melhorar o fluxo de informações, permitindo que pacientes recebam notificações, lembretes e possam até mesmo confirmar ou reagendar compromissos diretamente pelo aplicativo. Essa abordagem visa reduzir faltas, 
+otimizar processos e trazer mais agilidade na troca de informações entre os envolvidos.
+Leia a documentação <a href="http://javadocsapiwhatsapp.devdiogenes.shop/index.html">JavaDocs</a> da aplicação.
 
 ## Funcionalidades
 
