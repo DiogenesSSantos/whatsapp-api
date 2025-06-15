@@ -8,11 +8,11 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * @author diogenessantos
  * Classe para configuração do spring-security leia a documentação spring-security para mais entendimento dessa classe
  * de configuração.
- *
- * @see @{@link "https://docs.spring.io/spring-security/reference/servlet/configuration/java.html"}
+ * @hidden
+ * @author diogenessantos
+ * <a href="https://docs.spring.io/spring-security/reference/servlet/configuration/java.html"> Spring-documentação</a>
  */
 @Configuration
 public class SecurityConfig {
@@ -26,8 +26,6 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/documentacao/**").permitAll()
-                        .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/apidocs/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/zap/enviarList").authenticated()
                         .anyRequest().authenticated()
@@ -37,9 +35,6 @@ public class SecurityConfig {
 
         return http.build();
     }
-
-
-
 
 
 }

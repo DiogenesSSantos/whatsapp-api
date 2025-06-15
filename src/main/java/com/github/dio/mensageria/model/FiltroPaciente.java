@@ -3,7 +3,10 @@ package com.github.dio.mensageria.model;
 import java.time.LocalDateTime;
 
 /**
- * The type Filtro paciente.
+ * Classe utilizada como fitlro do {@link com.github.dio.mensageria.repository.PacienteRepositoryImpl}
+ * fazendo a busca por parâmetros passado, explicado aonde o mesmo é utilizado {@link com.github.dio.mensageria.controller.EstatisticasController}
+ *
+ * @author diogenesssantos
  */
 public class FiltroPaciente {
     private String nome;
@@ -14,14 +17,15 @@ public class FiltroPaciente {
     private String motivo;
 
     /**
-     * Instantiates a new Filtro paciente.
+     * Inicialização do objeto {@link FiltroPaciente}.
      *
-     * @param nome                the nome
-     * @param bairro              the bairro
-     * @param dataMarcacaoInicial the data marcacao inicial
-     * @param dataMarcacaoFinal   the data marcacao final
-     * @param tipoConsulta        the tipo consulta
-     * @param motivo              the motivo
+     * @param nome                o nome
+     * @param bairro              o bairro
+     * @param dataMarcacaoInicial o período de data marcação inicial
+     * @param dataMarcacaoFinal   o período marcação final
+     * @param tipoConsulta        o tipo consulta
+     * @param motivo              o motivo corresponde aos valores AGUARDANDO, NÃO_POSSUI_WHATSAPP,
+     *                            NÃO_RESPONDIDO, ACEITO, REJEITADO + MOTIVO DESCRITO
      */
     public FiltroPaciente(String nome, String bairro, LocalDateTime dataMarcacaoInicial, LocalDateTime dataMarcacaoFinal, String tipoConsulta, String motivo) {
         this.nome = nome;
@@ -35,7 +39,7 @@ public class FiltroPaciente {
     /**
      * Gets nome.
      *
-     * @return the nome
+     * @return o nome
      */
     public String getNome() {
         return this.nome;
@@ -44,7 +48,7 @@ public class FiltroPaciente {
     /**
      * Gets bairro.
      *
-     * @return the bairro
+     * @return o bairro
      */
     public String getBairro() {
         return this.bairro;
@@ -53,7 +57,7 @@ public class FiltroPaciente {
     /**
      * Gets data marcacao inicial.
      *
-     * @return the data marcacao inicial
+     * @return a data marcacao inicial
      */
     public LocalDateTime getDataMarcacaoInicial() {
         return this.dataMarcacaoInicial;
@@ -62,7 +66,7 @@ public class FiltroPaciente {
     /**
      * Gets data marcacao final.
      *
-     * @return the data marcacao final
+     * @return a data marcacao final
      */
     public LocalDateTime getDataMarcacaoFinal() {
         return this.dataMarcacaoFinal;
@@ -71,7 +75,7 @@ public class FiltroPaciente {
     /**
      * Gets tipo consulta.
      *
-     * @return the tipo consulta
+     * @return o tipo consulta
      */
     public String getTipoConsulta() {
         return this.tipoConsulta;
@@ -80,7 +84,7 @@ public class FiltroPaciente {
     /**
      * Gets motivo.
      *
-     * @return the motivo
+     * @return o motivo
      */
     public String getMotivo() {
         return this.motivo;

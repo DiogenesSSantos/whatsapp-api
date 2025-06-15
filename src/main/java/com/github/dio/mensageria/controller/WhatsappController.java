@@ -11,12 +11,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * The type Whatssapp api controller.
+ * Classe {@link WhatsappController}
+ * @author diogenesssantos
  */
 @CrossOrigin(origins = {"*"})
 @RestController
 @RequestMapping(value = {"/api/zap"}, produces = {"application/json"})
-public class whatssappApiController extends WhatsappDocumentationOpenAPI {
+public class WhatsappController extends WhatsappDocumentationOpenAPI {
 
     @Autowired
     private WhatsappService service;

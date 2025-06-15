@@ -10,24 +10,28 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * The type Assemble filtro.
+ * A classe responsável para montar o filtro dados os parãmetros passado no seu método static.
+ * @author diogenesssantos
  */
 @Component
 public class AssembleFiltro {
+
     private static final Logger log = LoggerFactory.getLogger(AssembleFiltro.class);
 
     /**
      * Criando filtro filtro paciente.
      *
-     * @param nome               the nome
-     * @param bairro             the bairro
-     * @param dataMarcacaoIncial the data marcacao incial
-     * @param dataMarcacaoFinal  the data marcacao final
-     * @param consulta           the consulta
-     * @param motivo             the motivo
+     * @param nome               o nome
+     * @param bairro             o bairro
+     * @param dataMarcacaoIncial a data marcacao inicial
+     * @param dataMarcacaoFinal  a data marcacao final
+     * @param consulta           o tipo de  consulta
+     * @param motivo             o motivo representado por:
+     *                           AGUARDANDO, NÃO_POSSUI_WHATSAPP,
+     *                           NÃO_RESPONDIDO, ACEITO, NÃO_ACEITO COM MOTIVO PERSONALZIADO
      * @return the filtro paciente
      */
-    public static FiltroPaciente criandoFiltro(String nome, String bairro, String dataMarcacaoIncial, String dataMarcacaoFinal, String consulta, String motivo) {
+    public static FiltroPaciente criarFiltro(String nome, String bairro, String dataMarcacaoIncial, String dataMarcacaoFinal, String consulta, String motivo) {
         if (nome == null && bairro == null && dataMarcacaoIncial == null && dataMarcacaoFinal == null && consulta == null && motivo == null) {
             log.warn("ENTROU NA CONDIÇÃO NULL NO FILTRO DE PESQUISA");
             return null;
@@ -35,18 +39,19 @@ public class AssembleFiltro {
             LocalDateTime dataInicialFormatada = null;
             LocalDateTime dataFinalFormatada = null;
             if (dataMarcacaoIncial != null && !dataMarcacaoIncial.isBlank()) {
-                dataInicialFormatada = formataData(dataMarcacaoIncial);
+                dataInicialFormatada = formatarData(dataMarcacaoIncial);
             }
 
             if (dataMarcacaoFinal != null && !dataMarcacaoFinal.isBlank()) {
-                dataFinalFormatada = formataData(dataMarcacaoFinal);
+                dataFinalFormatada = formatarData(dataMarcacaoFinal);
             }
 
             return new FiltroPaciente(nome, bairro, dataInicialFormatada, dataFinalFormatada, consulta, motivo);
         }
     }
 
-    private static LocalDateTime formataData(String data) {
+
+    private static LocalDateTime formatarData(String data) {
         DateTimeFormatter formatador = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         LocalDate dataFormatada = LocalDate.parse(data, formatador);
         return dataFormatada.atStartOfDay();

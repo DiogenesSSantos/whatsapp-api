@@ -7,17 +7,18 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 
 /**
- * @author
  * Configuração de CORS.
  * CORS -> é um mecanismo de segurança implementado nos navegadores que decide, por meio de cabeçalhos HTTP,
  * como e se um recurso disponível em um domínio pode ser solicitado por páginas de outro domínio.
+ * @hidden
+ * @author diogenes
  *
  */
 @Configuration
 public class WebConfig {
     /**
      * Bean de configuração quais permitimos os métodos de requisições que usuário tem acesso.
-     * GET, POST, PUT, DELETE , OPTION.
+     * GET, POST, PUT, DELETE, OPTION.
 
      * @return  web mvc configurer;
      */

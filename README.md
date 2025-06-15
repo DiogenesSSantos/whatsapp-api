@@ -8,26 +8,27 @@ Esta API foi criada para integrar o canal de comunicação via WhatsApp com os s
 
 ## Funcionalidades
 
-- **Envio de Mensagens Automatizado:** Automatize a comunicação com os pacientes, enviando confirmações, lembretes e notificações sobre alterações nos agendamentos.
+- **Envio de Mensagens Automatizado:** Automatize a comunicação com os pacientes, enviando consultas/exames marcados.
 - **Confirmação Interativa:** Permite que os pacientes confirmem ou solicitem alterações diretamente pela resposta à mensagem.
-- **Registro de Comunicação:** Guarda o histórico das interações para fins de auditoria e análise de dados.
-- **Integração com Sistemas de Agendamento:** Facilita a sincronização com bancos de dados e outros serviços utilizados pela Regulação de Saúde.
-- **Alertas e Notificações:** Configuração de lembretes antes dos compromissos para reduzir a taxa de faltas.
+- **Registro de Comunicação:** Guarda o histórico das interações para fins de auditoria e análise de dados, como impressão em PDF desses dados.
 
 ## Tecnologias Utilizadas
 
-- **Backend:** JAVA
-- **Front-end:** Html,css,javaScript (Desenvolvido por -> https://github.com/LuaMoreiraa)
-- **Banco de Dados:** MongoDB, MySQL ou outro SGBD de sua escolha
-- **Integração WhatsApp:** Utilizando a biblioteca do autiesCobalt
-- **Autenticação:** JWT ou outro método robusto para controle de acesso // AINDA VAI SER IMPLEMENTADO
-
-> *Ajuste essas tecnologias conforme a implementação real do projeto.*
+- **Backend:** Java + spring boot
+- **Front-end:** Html,Css,JavaScript Desenvolvido por -> https://github.com/LuaMoreiraa
+- **Banco de Dados:** MongoDB, MySQL ou outro SGBD da sua escolha
+- **Integração WhatsApp:** Biblioteca do <a href= "https://github.com/Auties00/Cobalt">autiesCobalt</a>
+- **Gerador QrCode:** Biblioteca do <a href="https://github.com/zxing/zxing">zxing</a>
+- **Relatórios:** JasperReports
+- **Autenticação:** Oauth2 um método robusto para controle de acesso
 
 ## Requisitos
 
-- **Java:** Versão 17 ou superior (ou a versão compatível com seu projeto)
-- **Conexão com a API do WhatsApp:** Configuração das credenciais e tokens necessários (ainda vai ser implementado)
+- **Java:** Versão 21 ou superior
+- **Spring Boot:** Versão mais recente
+- **JasperReports:** Versão mais recente
+- **QrCodeGerador:** Versão masi recente da biblioteca da https://github.com/zxing/zxing
+- **Conexão com a API do WhatsApp:** Biblioteca do https://github.com/Auties00/Cobalt
 - **Banco de Dados:** Sistema de armazenamento devidamente configurado e conectado
 
 ## Instalação
@@ -37,4 +38,3 @@ Esta API foi criada para integrar o canal de comunicação via WhatsApp com os s
    ```bash
    git clone https://github.com/DiogenesSSantos/whatsappApi.git
 
-  git clone 

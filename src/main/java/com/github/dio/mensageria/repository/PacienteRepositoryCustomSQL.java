@@ -7,16 +7,17 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 /**
- * The interface Paciente repository custom sql.
+ * ‘Interface’ para implementação personalizada, no caso ela foi criada para fazer um método de filtragem.
+ * @hidden
+ * @author diogenesssantos
  */
 @Repository
 public interface PacienteRepositoryCustomSQL {
-
     /**
-     * Filtrar list.
+     * Método usamos {@link FiltroPaciente} para buscar os dados no banco de dados.
      *
-     * @param filtroPaciente the filtro paciente
-     * @return the list
+     * @param filtroPaciente o filtro paciente
+     * @return a list<Paciente>
      */
     List<Paciente> filtrar(FiltroPaciente filtroPaciente);
 

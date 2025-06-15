@@ -7,7 +7,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import java.util.concurrent.ExecutionException;
 
 /**
- * The type Whatsapp api application.
+ * Classe main para inicialização.
+ *
+ * @author diogenesssantos
+ * @hidden
  */
 @EnableScheduling
 @SpringBootApplication
@@ -22,11 +25,11 @@ public class WhatsappApiApplication {
 
 
     /**
-     * The entry point of application.
      *
      * @param args the input arguments
      * @throws ExecutionException   the execution exception
      * @throws InterruptedException the interrupted exception
+     * @hidden
      */
     public static void main(String[] args) throws ExecutionException, InterruptedException {
         SpringApplication.run(WhatsappApiApplication.class, args);

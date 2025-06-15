@@ -8,23 +8,25 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
- *  * @author diogenesssantos  A classe Restcontroller estátistias,
- *  Que permite-nos acesso aos endpoins de consulta e imprimirPDF  aonde está disponivel todos os dados de marcações.
+ *  A classe Restcontroller estátistias,
+ *  que nos permite acesso aos endpoins de consulta e imprimirPDF aonde está disponivel todos os dados de marcações.
+ *  @hidden
+ *  @author diogenesssantos.
  */
 @Tag(name = "EstatisticasController", description = "Endpoints para buscar dados das marcacões")
 public abstract class EstatisticasDocumentationOpenAPI {
 
     /**
-     * endpoint GET Consultar nos retorna os dados de marcações em JSON.
+     * Endpoint GET Consultar nos retorna os dados de marcações em JSON.
      *
      *
-     * @apiNote permite filtra 1 ou n combinações facilitando a busca dos dados especificos.
+     * Permite filtra 1 ou n combinações facilitando a busca dos dados específicos.
      * @param nome                o nome paciente
      * @param bairro              o bairro aonde o paciente reside
      * @param dataMarcacaoInicial a data marcacao inicial
      * @param dataMarcacaoFinal   a data marcacao final
      * @param consulta            tipo de consulta
-     * @param motivo              o motivo sendo possivel ser  ACEITO, NÃO_RESPONDIDO, NEGADO_JUNTO_UMA_DESCRIÇÃO
+     * @param motivo              o motivo sendo possivel ser ACEITO, NÃO_RESPONDIDO, NEGADO_JUNTO_UMA_DESCRIÇÃO
      * @return JSON dos dados ou [] vazio.
      */
     @ApiResponses(value = {
@@ -45,18 +47,18 @@ public abstract class EstatisticasDocumentationOpenAPI {
 
 
     /**
-     * endpoint GET ImprimirPDF retorna arquivo PDF para download.
+     * Endpoint GET ImprimirPDF retorna arquivo PDF para ‘download’.
      *
      *
-     * @apiNote permite filtra 1 ou n combinações facilitando a busca dos dados especificos.
+     * Permite filtra 1 ou n combinações facilitando a busca dos dados específicos.
      * @param nome                o nome paciente
      * @param bairro              o bairro aonde o paciente reside
      * @param dataMarcacaoInicial a data marcacao inicial
      * @param dataMarcacaoFinal   a data marcacao final
      * @param consulta            tipo de consulta
-     * @param motivo              o motivo sendo possivel ser  ACEITO, NÃO_RESPONDIDO, NEGADO_JUNTO_UMA_DESCRIÇÃO
+     * @param motivo              o motivo sendo possivel ser ACEITO, NÃO_RESPONDIDO, NEGADO_JUNTO_UMA_DESCRIÇÃO
      *
-     * @apiNote caso não exista dados para o fitlro passado, vai retorna PDF em branco para download.
+     * caso não exista dados para o fitlro passado, vai retornar PDF em branco para ‘download’.
      *
      * @return []byte ja contendo o PDF para download .
      */

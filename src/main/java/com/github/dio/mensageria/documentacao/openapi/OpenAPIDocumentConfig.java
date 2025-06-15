@@ -18,16 +18,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * The type Open api document config.
+ * Classe de configuração da documentação do OpenAPI
+ * @hidden
  */
 @Configuration
 public class OpenAPIDocumentConfig {
 
-    /**
-     * Open api open api.
-     *
-     * @return the open api
-     */
+
     @Bean
     public OpenAPI openAPI() {
         return new OpenAPI()
@@ -51,11 +48,7 @@ public class OpenAPIDocumentConfig {
     }
 
 
-    /**
-     * Whatsapp controle grouped open api.
-     *
-     * @return the grouped open api
-     */
+
     @Bean
     public GroupedOpenApi whatsappControle() {
         return GroupedOpenApi.builder()
@@ -65,11 +58,7 @@ public class OpenAPIDocumentConfig {
 
     }
 
-    /**
-     * Estaticas controle grouped open api.
-     *
-     * @return the grouped open api
-     */
+
     @Bean
     public GroupedOpenApi estaticasControle() {
         return GroupedOpenApi.builder()
@@ -79,11 +68,7 @@ public class OpenAPIDocumentConfig {
 
     }
 
-    /**
-     * Qr code controle grouped open api.
-     *
-     * @return the grouped open api
-     */
+
     @Bean
     public GroupedOpenApi qrCodeControle() {
         return GroupedOpenApi.builder()
@@ -94,11 +79,7 @@ public class OpenAPIDocumentConfig {
     }
 
 
-    /**
-     * Customização global response open api customizer.
-     *
-     * @return the open api customizer
-     */
+
     @Bean
     public OpenApiCustomizer customizaçãoGlobalResponse() {
         return openApi -> {

@@ -11,7 +11,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
- * The type Fila service.
+ * A classe que possui à metodologia de PRODUCE AND CONSUMER.
+ * usando {@link ExecutorService } para executar em uma SingleThead a persistência de dados.
+ * @author diogenesssantos.
+ *
  */
 @Service
 public class FilaService {
@@ -22,7 +25,12 @@ public class FilaService {
     private PacienteRepository pacienteRepository;
 
 
-
+    /**
+     * Recebemos todos os parâmetros do método executarProducaoEConsumo,
+     *
+     * @return task {@link CompletableFuture} que possui uma regra de negócio aonde fazendo a
+     * persistência usando Spring-jpa.
+     */
     private CompletableFuture<Void> persistirDados(String mensagemUsuario, Paciente paciente, String numero) {
         return CompletableFuture.runAsync(() -> {
             if (mensagemUsuario.equalsIgnoreCase("ACEITO")) {
@@ -38,11 +46,14 @@ public class FilaService {
     }
 
     /**
-     * Executa producao e consumo.
+     * Executa um método persistirDados(um {@link CompletableFuture}) que possui  á regra de negocio aonde e feito a
+     * persistência no banco de dados.
+     * além de possuir o padrão FIFO, Usando fila {@link LinkedBlockingQueue}.
      *
-     * @param mensagem the mensagem
-     * @param paciente the paciente
-     * @param numero   the numero
+     * @param mensagem a mensagem do usuário,
+     * @param paciente os dados paciente,
+     * @param numero    o numero do whatsapp,
+     *                 devido que o mesmo pode ter n contatos, persistimos apenas a resposta do primero.
      */
     public void executaProducaoEConsumo(String mensagem, Paciente paciente, String numero) {
 

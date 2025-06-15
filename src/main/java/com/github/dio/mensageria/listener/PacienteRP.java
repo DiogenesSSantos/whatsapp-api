@@ -3,7 +3,10 @@ package com.github.dio.mensageria.listener;
 import com.github.dio.mensageria.model.Paciente;
 
 /**
- * The type Paciente rp.
+ * Classe representacional.
+ *
+ * @author diogenesssantos Classe modelo para representação do {@link Paciente}
+ * @hidden
  */
 class PacienteRP {
     private String numeroUsuario;
@@ -11,12 +14,13 @@ class PacienteRP {
     private String uuidUnicoUsuario;
     private Paciente paciente;
 
+
     /**
-     * Instantiates a new Paciente rp.
+     * Inicialização de um {@link PacienteRP}
      *
-     * @param numeroUsuario    the numero usuario
-     * @param uuidUnicoUsuario the uuid unico usuario
-     * @param paciente         the paciente
+     * @param numeroUsuario    o número usuário
+     * @param uuidUnicoUsuario o uuid único usuário
+     * @param paciente         o paciente
      */
     public PacienteRP(String numeroUsuario, String uuidUnicoUsuario, Paciente paciente) {
         this.numeroUsuario = "+" + numeroUsuario;
@@ -24,8 +28,9 @@ class PacienteRP {
         this.paciente = paciente;
     }
 
+
     /**
-     * Gets numero usuario.
+     * Gets número do usuario.
      *
      * @return the numero usuario
      */
@@ -34,7 +39,7 @@ class PacienteRP {
     }
 
     /**
-     * Sets numero usuario.
+     * Sets número usuario.
      *
      * @param numeroUsuario the numero usuario
      */
@@ -43,36 +48,36 @@ class PacienteRP {
     }
 
     /**
-     * Gets motivo desistencia.
+     * Gets motivo desistência.
      *
-     * @return the motivo desistencia
+     * @return o motivo desistencia
      */
     public Boolean getMotivoDesistencia() {
         return this.motivoDesistencia;
     }
 
     /**
-     * Sets motivo desistencia.
+     * Sets motivo desistência.
      *
-     * @param motivoDesistencia the motivo desistencia
+     * @param motivoDesistencia o motivo desistencia
      */
     public void setMotivoDesistencia(Boolean motivoDesistencia) {
         this.motivoDesistencia = motivoDesistencia;
     }
 
     /**
-     * Gets uuid unico usuario.
+     * Gets uuid único usuário.
      *
-     * @return the uuid unico usuario
+     * @return the uuid único usuário
      */
     public String getUuidUnicoUsuario() {
         return this.uuidUnicoUsuario;
     }
 
     /**
-     * Sets uuid unico usuario.
+     * Sets uuid único usuário.
      *
-     * @param uuidUnicoUsuario the uuid unico usuario
+     * @param uuidUnicoUsuario o uuid único usuario
      */
     public void setUuidUnicoUsuario(String uuidUnicoUsuario) {
         this.uuidUnicoUsuario = uuidUnicoUsuario;

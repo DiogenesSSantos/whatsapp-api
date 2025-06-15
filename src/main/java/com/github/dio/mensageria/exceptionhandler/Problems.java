@@ -6,7 +6,8 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 /**
- * The type Problems.
+ * Classe model para representação do {@link org.springframework.beans.factory.parsing.Problem}
+ * @hidden
  */
 @Getter
 @Builder

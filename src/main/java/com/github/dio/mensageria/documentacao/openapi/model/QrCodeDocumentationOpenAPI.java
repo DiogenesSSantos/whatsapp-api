@@ -11,19 +11,20 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
 
 /**
- * @author diogenesssantos
- * A classe aonde permite converter o nosso Qrcode recebido da nossa instancia do
+ * A classe aonde permite converter o nosso Qrcode recebido da nossa instância do
  * {@link com.github.dio.mensageria.service.WhatsappService}
- * em uma image QrCode e posteriormente ser authenticado pelo whatsapp.
+ * em uma image QrCode e posteriormente ser authenticado pelo WhatsApp.
+ * @hidden
+ * @author diogenesssantos
  */
 @Tag(name = "QrCodeController", description = "Endpoints para gerenciar a operação de QR Code para conexão com o WhatsApp")
 public abstract class QrCodeDocumentationOpenAPI {
 
     /**
-     * O método faz a conversão usando a biblioteca {@link "https://github.com/zxing/zxing}
-     * @see {@link "https://zxing.github.io/zxing/apidocs/"}
+     * O método faz a conversão usando a biblioteca zxing
+     * consulte: <a href="https://zxing.github.io/zxing/apidocs/">zxing</a>
      *
-     * @return qr code image em tela para ser capturado pelo aplicativo do whatsapp.
+     * @return qr code image em tela para ser capturado pelo aplicativo do WhatsApp.
      */
     @Operation(
             summary = "Obter QR Code",
@@ -47,9 +48,10 @@ public abstract class QrCodeDocumentationOpenAPI {
     public abstract ResponseEntity<InputStreamResource> getQrCodeImage()throws Exception;
 
     /**
-     * Recebe e processa os dados do QR Code enviados pelo cliente, registrando a resposta para possibilitar um fluxo de reconexão.
+     * Recebe e processa os dados do QR code enviados pelo cliente, registrando a resposta para possibilitar um fluxo de
+     * reconexão.
      *
-     * @param qrCodeRequest nossa classe representacional @see {@link QrCodeRequest}.
+     * @param qrCodeRequest a nossa classe representacional @see {@link QrCodeRequest}.
      * @return the response entity
      */
     @Operation(
@@ -71,8 +73,8 @@ public abstract class QrCodeDocumentationOpenAPI {
     );
 
     /**
-     * @author diogenes
      * Classe representacional para receber a resposta qrCode do front-end.
+     * @author diogenes
      */
     public static class QrCodeRequest {
         @Schema(

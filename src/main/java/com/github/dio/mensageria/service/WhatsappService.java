@@ -29,16 +29,17 @@ import java.util.concurrent.*;
 
 
 /**
- * The type Whatsapp service.
- *
- * @author Diogenes_Santos
+ *  Classe de serviço aonde conectamos a biblioteca o Auties/cobalt para inicialização de uma
+ *  instãncia do {@link Whatsapp}, além de enviar mensagem.
+ * @author diogenesssantos.
  */
 @Service
 public class WhatsappService {
 
     private static final Logger log = LoggerFactory.getLogger(com.github.dio.mensageria.service.WhatsappService.class);
     /**
-     * The constant NAO_RESPONDIDA_MSG_PADRÃO.
+     * Mensagem  padrão para uso de não obtimento de resposta.
+     * @hidden
      */
     public static final String NAO_RESPONDIDA_MSG_PADRÃO = "Informamos que o prazo de 48 horas para a retirada do comprovante de agendamento expirou. " +
             "Se você já retirou o seu comprovante, por favor, desconsidere este aviso. Caso contrário, " +
@@ -47,7 +48,8 @@ public class WhatsappService {
             "Atenciosamente, Regulação de Saúde.";
 
     /**
-     * The constant NAO_RESPONDIDA_MSG_PADRÃO_FINAL_SEMANA.
+     * Mensagem padrão para uso de não obtimento de resposta.
+     * @hidden
      */
     public static final String NAO_RESPONDIDA_MSG_PADRÃO_FINAL_SEMANA = "Informamos que o prazo de 48 horas para a retirada do comprovante de agendamento expirou. " +
             "Se você já retirou o seu comprovante, por favor, desconsidere este aviso. Caso contrário, " +
@@ -60,7 +62,7 @@ public class WhatsappService {
     private static Set<String> pacienteSetStringUUID = new ConcurrentSkipListSet<>();
     private static CompletableFuture<Whatsapp> whatsappFuture;
     /**
-     * The constant pacienteList.
+     * Uma constante reponsável por armazenar os paciente que não responderam à mensagem.
      */
     public static final List<PacienteEncapsuladoNaoRespondido> pacienteList = new LinkedList<>();
 
@@ -73,9 +75,9 @@ public class WhatsappService {
 
 
     /**
-     * Instantiates a new Whatsapp service.
+     * Inicialização do  Whatsapp service.
      *
-     * @param pacienteRepository the paciente repository
+     * @param pacienteRepository o pacienteRepository para persistimos os dados no banco de dados.
      */
     @Autowired
     public WhatsappService(PacienteRepository pacienteRepository) {
@@ -85,6 +87,10 @@ public class WhatsappService {
 
     /**
      * Init.
+     * após a construção do objeto pelo contexto spring o método chama a biblioteca do autie/cobalt para inicializar
+     * uma instância do whatsapp, permitindo a conexão via QR chamado pelo {@link com.github.dio.mensageria.controller.QrCodeController},
+     * o método também possui uma prevenção de desconexão do whatsapp para não perdemos os {@link ListenerNovaMensagem}
+     * vejá o método recuperandoListenerNovaMensagem(whatsappFuture) e sua documentação.
      */
     @PostConstruct
     public void init() {
@@ -118,7 +124,8 @@ public class WhatsappService {
 
 
     /**
-     * Execute thread limpeza memoria.
+     * Após a construção do objeto chamamos o método limpandoListLinkedWhasappListener(), leia a documentação do método
+     * para mais detalhes.
      */
     @PostConstruct
     public void executeThreadLimpezaMemoria() {
@@ -127,8 +134,9 @@ public class WhatsappService {
 
     /**
      * Gets qr code.
-     *
-     * @return the qr code
+     * Esse método em especifico é utilizado pelo {@link com.github.dio.mensageria.controller.QrCodeController}
+     * @return o qr code
+     * @hidden
      */
     public String getQrCode() {
         return qrCode;
@@ -137,6 +145,8 @@ public class WhatsappService {
 
     /**
      * Conectar.
+     * Na regra de negócio pode ser chamado pelo end-point,{@link com.github.dio.mensageria.controller.WhatsappController},
+     * como também tem o propósito de reconexão do whatsap chamado pelo verificarConexao(), leia a documentação do método.
      */
     public void conectar() {
         init();
@@ -144,7 +154,9 @@ public class WhatsappService {
 
 
     /**
-     * Desconectar.
+     * Desconectar, na regra de negócio pode ser chamado pelo end-point
+     * {@link com.github.dio.mensageria.controller.WhatsappController}, assim permitindo o thread verificarConexao()
+     * faça reconexão da instância {@link Whatsapp}.
      */
     public void desconectar() {
         if (isDisconnecting) {
@@ -159,7 +171,7 @@ public class WhatsappService {
                     whatsappFuture = new CompletableFuture<>();
                     System.out.println("API DESCONECTADA");
                 }).exceptionally(throwable -> {
-                    System.out.println("ERRO NA API" + throwable);
+                    log.warn("ERRO NA API" + throwable);
                     isDisconnecting = false;
                     return null;
                 });
@@ -174,7 +186,10 @@ public class WhatsappService {
 
 
     /**
-     * Enviar mensagem lista.
+     * Primero passo.
+     * Do {@link com.github.dio.mensageria.controller.WhatsappController} recebemos uma lista de paciente
+     * representacional, como esse paciente pode ter uma lista<Numero> chamamos outros método para enviar para cada
+     * número desse paciente.
      *
      * @param pacienteMRList the paciente mr list
      */
@@ -190,9 +205,11 @@ public class WhatsappService {
 
 
     /**
-     * Enviar mensagem.
+     * Segundo passo.
+     * Do método anterior pegamos cada usuario que possui 1 ou n números e chamamos o
+     * enviandoMensagemTexto(PacienteMR pacienteMR, String numero).
      *
-     * @param paciente the paciente
+     * @param paciente o paciente único retirado da lista recebida pelo {@link com.github.dio.mensageria.controller.WhatsappController}
      * @throws InterruptedException the interrupted exception
      */
     public void enviarMensagem(PacienteMR paciente) throws InterruptedException {
@@ -203,6 +220,19 @@ public class WhatsappService {
 
 
     }
+
+
+    /**
+     * Terceiro passo.
+     * Método responsável para envio da mensagem, e delega responsabilidade para outros métodos
+     * salvandoIncialmenteAguardando(PacienteMR pacienteMR);
+     * salvandoNaoPossuiWhatsapp(PacienteMR pacienteMR);
+     * fazer a persistência no banco de dados, que posteriormente também é criado {@link ListenerNovaMensagem}, ele possui
+     * uma própria documentação explicando sua responsabilidade leia.
+     *
+     * @param pacienteMR
+     * @param numero
+     */
 
 
     private void enviandoMensagemTexto(PacienteMR pacienteMR, String numero) {
@@ -240,8 +270,9 @@ public class WhatsappService {
 
                     whatsapp.sendMessage(contactJid, mensagem).thenRun(() -> {
                         System.out.println("Mensagem enviada para: " + numero);
+
                     }).exceptionally(ex -> {
-                        System.err.println("Erro ao enviar mensagem: " + ex.getMessage());
+                        log.warn("Erro ao enviar mensagem: " + ex.getMessage());
                         ex.printStackTrace();
                         return null;
                     });
@@ -249,14 +280,15 @@ public class WhatsappService {
                     salvandoNaoPossuiWhatsapp(pacienteMR);
                 }
             } catch (Exception e) {
-                System.err.println("Erro ao enviar mensagem: " + e.getMessage());
+                log.warn("Erro ao enviar mensagem: " + e.getMessage());
                 e.printStackTrace();
             }
         }).exceptionally(ex -> {
-            System.err.println("Falha ao obter a instância do WhatsApp: " + ex.getMessage());
+            log.warn("Falha ao obter a instância do WhatsApp: " + ex.getMessage());
             return null;
         });
     }
+
 
 
     private Paciente salvandoIncialmenteAguardando(PacienteMR pacienteMR) {
@@ -301,6 +333,11 @@ public class WhatsappService {
     }
 
 
+    /**
+     * Método para validar final de semana, para uso das constante NAO_RESPONDIDA_MSG_PADRÃO //
+     * NAO_RESPONDIDA_MSG_PADRÃO_FINAL_SEMANA
+     * @return true ou false
+     */
     private static boolean isFinalSemana() {
         LocalDate data = LocalDate.now(ZoneId.of("America/Recife"));
         return data.getDayOfWeek().toString().equalsIgnoreCase(DayOfWeek.SATURDAY.toString())
@@ -309,6 +346,11 @@ public class WhatsappService {
     }
 
 
+    /**
+     * Responsabilidade desse método caso uma desconexão inesperada do {@link Whatsapp}, quando o
+     * método verificarConexão() reconectar na instãncia do whatsapp os {@link ListenerNovaMensagem} não serem perdidos.
+     * @param whatsappFuture recebemos o whastsapp recuperado do método init().
+     */
     private void recuperandoListenerNovaMensagem(CompletableFuture<Whatsapp> whatsappFuture) {
         Iterator<ListenerNovaMensagem> iterator = queue.iterator();
 
@@ -325,7 +367,11 @@ public class WhatsappService {
 
 
     /**
-     * Verificar conexao.
+     * Esse método à cada 30 segundos verifica se o whatsapp está conectado com auxílio de uma thread
+     * paralela é criada pelo contexto spring, caso não esteja conectado é chamado o método conectar() que chama
+     * posteriormente o init() e temos a reconexão do {@link Whatsapp}, ele também chama explicitamente o
+     * GarbageCollection para uma limpeza da instãncia perdida,
+     * (sabendo-se que a limpeza não é imediata leia a documentação do JAVA e sobre GARBAGE_COLLECTION).
      *
      * @throws InterruptedException the interrupted exception
      */
@@ -347,7 +393,18 @@ public class WhatsappService {
 
 
     /**
-     * Limpando list linked whatsapp listener.
+     * O método tem como responsabilidade a cada 48 horas, aqueles que não responderem a mensagem receberam outra
+     * mensagem que passa uma informação depois removemos os {@link ListenerNovaMensagem} fazendo uma limpeza
+     * geral do observadores e objetos salvos em mémoria:
+     * queue.clear();
+     * pacienteSetStringUUID.clear();
+     * pacienteList.clear();
+     * ListenerNovaMensagem.pacienteList.clear();
+     *
+     * Além  de para cada {@link ListenerNovaMensagem} chamamos o método thisReset() Leia a documentação {@link ListenerNovaMensagem},
+     * deixando eles elegível para futura passagem da garbage collection fazer a limpeza da mémoria.
+     * ExecutorService foi utilizado devido a questões didáticas poderia também ser feito usando
+     * @Scheduled do spring.
      */
     public void limpandoListLinkedWhatsappListener() {
         Runnable runnable = () -> {
@@ -392,7 +449,7 @@ public class WhatsappService {
                     });
                 }
             }).thenRun(() -> {
-                log.warn("____LIMPEZA PERIÓDICA____");
+                log.warn("____LIMPEZA_PERIÓDICA____");
                 pacienteSetStringUUID.clear();
                 queue.clear();
                 pacienteList.clear();

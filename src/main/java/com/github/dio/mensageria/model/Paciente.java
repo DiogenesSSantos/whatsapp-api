@@ -8,7 +8,9 @@ import java.time.LocalDateTime;
 
 
 /**
- * The type Paciente.
+ * Classe entity, a mesma persistida no banco de dados.
+ *
+ * @author diogenessantos
  */
 @Entity
 @Table(
@@ -40,20 +42,22 @@ public class Paciente implements Comparable<Paciente> {
     private String motivo;
 
     /**
-     * Instantiates a new Paciente.
+     * Inicialização padrão Paciente para serialização.
+     *
+     * @hidden .
      */
     public Paciente() {
     }
 
     /**
-     * Instantiates a new Paciente.
+     * Os seus parãmetros de inicialização.
      *
-     * @param nome         the nome
-     * @param numero       the numero
-     * @param bairro       the bairro
-     * @param consulta     the consulta
-     * @param dataConsulta the data consulta
-     * @param motivo       the motivo
+     * @param nome         o nome
+     * @param numero       o numero
+     * @param bairro       o bairro
+     * @param consulta     o tipo consulta
+     * @param dataConsulta a data consulta
+     * @param motivo       o motivo decidido no {@link com.github.dio.mensageria.service.WhatsappService} em conjunto                     {@link com.github.dio.mensageria.listener.ListenerNovaMensagem}
      */
     public Paciente(String nome, String numero, String bairro, String consulta, String dataConsulta, String motivo) {
         this.nome = nome;
@@ -64,10 +68,11 @@ public class Paciente implements Comparable<Paciente> {
         this.motivo = motivo;
     }
 
+
     /**
      * Gets id.
      *
-     * @return the id
+     * @return o id
      */
     public Long getId() {
         return this.id;
@@ -76,124 +81,136 @@ public class Paciente implements Comparable<Paciente> {
     /**
      * Gets codigo.
      *
-     * @return the codigo
+     * @return o código
      */
     public String getCodigo() {
         return this.codigo;
     }
 
+
     /**
-     * Sets codigo.
+     * Sets código.
      *
-     * @param codigo the codigo
+     * @param codigo o código
      */
     public void setCodigo(String codigo) {
         this.codigo = codigo;
     }
 
+
     /**
      * Gets nome.
      *
-     * @return the nome
+     * @return o nome
      */
     public String getNome() {
         return this.nome;
     }
 
+
     /**
      * Sets nome.
      *
-     * @param nome the nome
+     * @param nome o nome
      */
     public void setNome(String nome) {
         this.nome = nome;
     }
 
     /**
-     * Gets numero.
+     * Gets número.
      *
-     * @return the numero
+     * @return the número
      */
     public String getNumero() {
         return this.numero;
     }
 
+
     /**
-     * Sets numero.
+     * Sets número.
      *
-     * @param numero the numero
+     * @param numero o número
      */
     public void setNumero(String numero) {
         this.numero = numero;
     }
 
+
     /**
      * Gets bairro.
      *
-     * @return the bairro
+     * @return o bairro
      */
     public String getBairro() {
         return this.bairro;
     }
 
+
     /**
      * Sets bairro.
      *
-     * @param bairro the bairro
+     * @param bairro o bairro
      */
     public void setBairro(String bairro) {
         this.bairro = bairro;
     }
 
+
     /**
      * Gets consulta.
      *
-     * @return the consulta
+     * @return o tipo consulta
      */
     public String getConsulta() {
         return this.consulta;
     }
 
+
     /**
      * Sets consulta.
      *
-     * @param consulta the consulta
+     * @param consulta o consulta
      */
     public void setConsulta(String consulta) {
         this.consulta = consulta;
     }
 
+
     /**
      * Gets data consulta.
      *
-     * @return the data consulta
+     * @return a data da consulta
      */
     public String getDataConsulta() {
         return this.dataConsulta;
     }
 
+
     /**
      * Sets data consulta.
      *
-     * @param dataConsulta the data consulta
+     * @param dataConsulta a data consulta
      */
     public void setDataConsulta(String dataConsulta) {
         this.dataConsulta = dataConsulta;
     }
 
+
     /**
      * Gets motivo.
      *
-     * @return the motivo
+     * @return o motivo
      */
     public String getMotivo() {
         return this.motivo;
     }
 
+
     /**
      * Sets motivo.
      *
-     * @param motivo the motivo
+     * @param motivo o motivo
      */
     public void setMotivo(String motivo) {
         this.motivo = motivo;

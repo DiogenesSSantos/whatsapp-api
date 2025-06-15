@@ -15,7 +15,11 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
-
+/**
+ * End-poins do {@link QrCodeController}
+ * @author diogenesssantos
+ *
+ */
 
 @RestController
 @RequestMapping({"/api/conexao"})

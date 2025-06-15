@@ -17,7 +17,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>whatsappApi</name>
     <description>
-        Projeto desenvolvido para suprir a necessidade de contatos com paciente sobre marcação, re-agendamento
+        Projeto desenvolvido para suprir a necessidade de contatos com paciente sobre marcação, reagendamento
         entre outras necessidades.
     </description>
 
@@ -117,6 +117,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <!-- Verifique se o pacote da classe principal está correto -->
                     <mainClass>com.github.dio.mensageria.WhatsappApiApplication</mainClass>
                     <excludes>
                         <exclude>
@@ -143,6 +144,21 @@
                             <version>0.0.7</version>
                         </annotationProcessorPath>
                     </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
+            <!-- Maven Javadoc Plugin para gerar documentação com métodos privados -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.11.2</version>
+                <configuration>
+                    <!-- Inclui membros privados -->
+                    <show>private</show>
+                    <!-- Ignora erros do doclint para evitar falhas no build -->
+                    <additionalJOptions>-Xdoclint:none</additionalJOptions>
+                    <!-- Faz com que o ‘Build’ continue mesmo se houver erros na geração dos Javadocs -->
+                    <failOnError>false</failOnError>
                 </configuration>
             </plugin>
         </plugins>

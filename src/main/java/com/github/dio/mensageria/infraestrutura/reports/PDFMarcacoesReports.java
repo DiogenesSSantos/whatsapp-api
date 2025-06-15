@@ -18,21 +18,23 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * The type Pdf marcacoes reports.
+ * A classe responsável para gerar o nosso relátorios em PDF para o {@link com.github.dio.mensageria.controller.EstatisticasController}
+ * @author diogenesssantos
  */
 @Service
-public class PdfMarcacoesReports {
+public class PDFMarcacoesReports {
     /**
-     * The Paciente repository.
+     * Injetamos para usamos o {@link FiltroPaciente} e buscar os dados no banco de dados.
+     * @hidden
      */
     @Autowired
     PacienteRepository pacienteRepository;
 
     /**
-     * Emitir pdf byte [ ].
-     *
-     * @param filtroPaciente the filtro paciente
-     * @return the byte [ ]
+     * Emitir pdf.
+     * @param filtroPaciente filtro personalizado para criação do relatório, se não existir dados para o filtro retorna
+     *                       PDF em branco.
+     * @return byte [ ]
      */
     public byte[] emitirPDF(FiltroPaciente filtroPaciente) {
         if (filtroPaciente == null) {
@@ -46,6 +48,13 @@ public class PdfMarcacoesReports {
         }
     }
 
+
+    /**
+     * Usamos a biblioteca do <a href="https://community.jaspersoft.com/">JasperReport</a>
+     * para criar os nossos relátorios, recebemos a lista de usuários para criação
+     ** @param pacienteList LIST<{@link Paciente}> buscada no banco de dados.
+     * @return [] byte.
+     */
     private byte[] preparandoJasper(List<Paciente> pacienteList) {
         try {
             InputStream inputStream = this.getClass().getResourceAsStream("/relatorios/apiwhatsapp-marcacoes.jasper");

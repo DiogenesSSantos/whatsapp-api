@@ -3,7 +3,8 @@ package com.github.dio.mensageria.documentacao.openapi.model.responserepresatati
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- * The type Http status 500 open api represetation.
+ * Classe representacional de error HTTP.STATUS.400
+ * @hidden
  */
 @Schema(name = "Problema-500")
 public class HttpStatus500OpenAPIRepresetation {
@@ -16,38 +17,19 @@ public class HttpStatus500OpenAPIRepresetation {
     private String nome;
 
 
-    /**
-     * Gets codigo.
-     *
-     * @return the codigo
-     */
+
     public int getCodigo() {
         return codigo;
     }
 
-    /**
-     * Sets codigo.
-     *
-     * @param codigo the codigo
-     */
     public void setCodigo(int codigo) {
         this.codigo = codigo;
     }
 
-    /**
-     * Gets nome.
-     *
-     * @return the nome
-     */
     public String getNome() {
         return nome;
     }
 
-    /**
-     * Sets nome.
-     *
-     * @param nome the nome
-     */
     public void setNome(String nome) {
         this.nome = nome;
     }

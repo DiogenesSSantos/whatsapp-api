@@ -16,7 +16,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The type Paciente repository.
+ * Classe responsável pelo implementação do {@link PacienteRepositoryCustomSQL},
+ * essa implementação possui um único método
+ * que tem como propósito retornar dados filtrado para
+ * {@link com.github.dio.mensageria.controller.EstatisticasController}.
+ *
+ * @author diogenesssantos.
  */
 @Repository
 public class PacienteRepositoryImpl implements PacienteRepositoryCustomSQL {
@@ -25,6 +30,13 @@ public class PacienteRepositoryImpl implements PacienteRepositoryCustomSQL {
     @Autowired
     private EntityManager entityManager;
 
+
+    /**
+     * O método possui api de {@link CriteriaBuilder} para acesso ao banco de dados.
+     * leia documentação do CriteriaAPI.
+     * @param filtroPaciente
+     * @return List<Paciente>
+     */
     public List<Paciente> filtrar(FiltroPaciente filtroPaciente) {
         CriteriaBuilder builder = this.entityManager.getCriteriaBuilder();
         CriteriaQuery<Paciente> querry = builder.createQuery(Paciente.class);

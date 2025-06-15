@@ -22,12 +22,17 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 
 /**
- * The type Listener nova mensagem.
+ * Classe que implementa o {@link Listener}
+ *
+ * @author diogenesssantos.
+ * A classe responsável para observar todas a mensagem respondida pelo paciente,
+ * utilizamos a biblioteca <a href="https://github.com/Auties00/Cobalt">auties/Cobalt</a>
+ * @Override no método onNewMessage().
  */
 @EnableAsync
 public class ListenerNovaMensagem implements Listener {
     /**
-     * The constant uuidUnicoUsuarioSet.
+     * Na regra de negócio, temos um set por uuid do {@link Paciente}, nos auxiliar em algumas validações.
      */
     public static final Set<String> uuidUnicoUsuarioSet = new ConcurrentSkipListSet();
 
@@ -36,21 +41,23 @@ public class ListenerNovaMensagem implements Listener {
     private PacienteEncapsuladoNaoRespondido pacienteEncapsuladoNaoRespondido;
     private FilaService filaService;
 
+
     /**
-     * Instantiates a new Listener nova mensagem.
+     * Inicialização padrão sem argumentos para serialização.
      */
     public ListenerNovaMensagem() {
     }
 
     /**
-     * Instantiates a new Listener nova mensagem.
+     * Para uma inicialização de {@link ListenerNovaMensagem} precisamos desses parâmetros para aplicação
+     * da regra de negócio.
      *
-     * @param numeroUsuario                     the numero usuario
-     * @param pacienteRepository                the paciente repository
-     * @param paciente                          the paciente
-     * @param linkeBlockingQueueWhatsAppService the linke blocking queue whats app service
-     * @param PacienteNaoRespondio              the paciente nao respondio
-     * @param filaService                       the fila service
+     * @param numeroUsuario                     o número usuario
+     * @param pacienteRepository                a instancia paciente repository
+     * @param paciente                          o paciente persistido anteriormente que possua um WhatsApp.
+     * @param linkeBlockingQueueWhatsAppService o linkeblockingqueue do whatsappservice e importante devido à resposta                                          do usuário removê-lo da fila.
+     * @param PacienteNaoRespondio              o pacientenaorespondio.
+     * @param filaService                       O fila service aonde executaremos PRODUCE AND CONSUMER,                                         Leia para mais detalhe {@link FilaService}
      */
     public ListenerNovaMensagem(String numeroUsuario, PacienteRepository pacienteRepository,
                                 Paciente paciente, LinkedBlockingQueue<ListenerNovaMensagem> linkeBlockingQueueWhatsAppService, PacienteEncapsuladoNaoRespondido PacienteNaoRespondio, FilaService filaService) {
@@ -62,6 +69,24 @@ public class ListenerNovaMensagem implements Listener {
 
     }
 
+    /**
+     * Esse é o método responsável para observar cada mensagem registrada pelo listener no {@link WhatsappService}
+     *
+     * @param whatsapp {@link Whatsapp}
+     * @param info é mensagem encapsulada leia {@link Whatsapp}
+     *
+     *
+     * Chamada interna desse método todos são private.
+     * 1-validaResposta(Whatsapp whatsapp, String mensagemUsuario)->se a resposta não for cumprida na regra negócio é
+     * enviada uma mensagem de aviso para usuário esperando uma resposta correta.
+     *
+     * 2-respostaSim(whatsapp, mensagemUsuario) -> dado uma resposta sim, usaremos o filaService junto com seu método
+     * PRODUCE AND CONSUMER.
+     *
+     * 3-respostaNao(whatsapp, mensagemUsuario) -> dado uma resposta não, usaremos o filaService junto com seu método
+     * PRODUCE AND CONSUMER.
+     */
+    @Override
     public void onNewMessage(Whatsapp whatsapp, MessageInfo<?> info) {
 
 
@@ -86,6 +111,9 @@ public class ListenerNovaMensagem implements Listener {
                 respostaNao(whatsapp, mensagemUsuario);
         }
     }
+
+
+
 
     private boolean isRespostaMotivoDesistenciaValida(Whatsapp whatsapp, MessageInfo<?> info, String mensagemUsuario) {
         if (this.pacienteRPStatic.getMotivoDesistencia() && info.message().content() instanceof TextMessage) {
@@ -150,7 +178,14 @@ public class ListenerNovaMensagem implements Listener {
 
 
     /**
-     * Reset this.
+     * @implNote
+     * Funcionalidade desse método é para solucionar um problema das versões anteriores,
+     * depois de um certo tempo tinha uma exceptio {@link ArrayIndexOutOfBoundsException}
+     * que fazia nossa aplicação crashar, devido à  muitos objetos em memória mesmo eles não terem mais utilidade de uso
+     * para {@link Listener},
+     * então conhecimento adquirido na documentação java sobre GABARGE COLLECTION quando o objeto e referenciado null
+     * em seus atributos ele fica elegível para limpeza de mémoria depois dessa implementação o error em novas versões
+     * não veio mais acontecer.
      */
     public void resetThis() {
         this.pacienteRPStatic = null;

@@ -15,15 +15,16 @@ import java.util.List;
 
 
 /**
- * The type Whatsapp documentation open api.
+ * A classe responsável pelos end-points de envio de mensagem, conexão e desconexão do whastsapp.
+ * @hidden
+ * @author diogenessantos
  */
 @Tag(name = "WhatsappController", description = "Endpoints para manipulação da comunicação via WhatsApp")
 public abstract class WhatsappDocumentationOpenAPI {
 
     /**
-     * Enviar para lista.
-     *
-     * @param pacienteMR the paciente mr
+     * Recebe um corpo JSON do front-end representando
+     * @param pacienteMR
      */
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Sucesso"),
@@ -41,7 +42,8 @@ public abstract class WhatsappDocumentationOpenAPI {
     );
 
     /**
-     * Desconectar whats app.
+     * End-point de desconexão do whatsapp veja o método desconectar()
+     * da classe {@link com.github.dio.mensageria.service.WhatsappService}, possui toda regra de negocio documentada.
      */
     @Operation(
             summary = "Desconecta a instância do WhatsApp",
@@ -50,7 +52,8 @@ public abstract class WhatsappDocumentationOpenAPI {
     public abstract void desconectarWhatsApp();
 
     /**
-     * Reconectar whats app.
+     * End-point de reconexao do whatsapp, mantendo a primeira conexão feita pelo usuário veja o método conectar()
+     * da classe {@link com.github.dio.mensageria.service.WhatsappService}, possui toda regra de negocio documentada.
      */
     @Operation(
             summary = "Reconecta o WhatsApp na aplicação",

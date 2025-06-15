@@ -9,7 +9,11 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * The type Paciente mr.
+ * Classe para representação da documentação {@link com.github.dio.mensageria.documentacao.openapi.OpenAPIDocumentConfig}
+ * então também corresponde a classe {@link com.github.dio.mensageria.model.Paciente}
+ *
+ * @author diogenesssantos
+ * @hidden
  */
 @Schema(name = "PacienteMR", description = "Atributos")
 @Data
@@ -50,100 +54,111 @@ public class PacienteMR {
     )
     private String data;
 
+
     /**
      * Gets id.
      *
-     * @return the id
+     * @return o id
      */
     public UUID getId() {
         return this.id;
     }
 
+
     /**
      * Sets id.
      *
-     * @param id the id
+     * @param id o id
      */
     public void setId(UUID id) {
         this.id = id;
     }
 
+
     /**
      * Gets nome.
      *
-     * @return the nome
+     * @return o nome
      */
     public String getNome() {
         return this.nome;
     }
 
+
     /**
      * Sets nome.
      *
-     * @param nome the nome
+     * @param nome o nome
      */
     public void setNome(String nome) {
         this.nome = nome;
     }
 
+
     /**
-     * Gets numeros.
+     * Gets números.
      *
-     * @return the numeros
+     * @return os números
      */
     public List<String> getNumeros() {
         return this.numeros;
     }
 
+
     /**
-     * Sets numeros.
+     * Sets números.
      *
-     * @param numeros the numeros
+     * @param numeros os números
      */
     public void setNumeros(List<String> numeros) {
         this.numeros = numeros;
     }
 
+
     /**
      * Gets bairro.
      *
-     * @return the bairro
+     * @return o bairro
      */
     public String getBairro() {
         return this.bairro;
     }
 
+
     /**
      * Sets bairro.
      *
-     * @param bairro the bairro
+     * @param bairro o bairro
      */
     public void setBairro(String bairro) {
         this.bairro = bairro;
     }
 
+
     /**
      * Gets consulta.
      *
-     * @return the consulta
+     * @return o  tipo consulta
      */
     public String getConsulta() {
         return this.consulta;
     }
 
+
     /**
      * Sets consulta.
      *
-     * @param consulta the consulta
+     * @param consulta tipo de consulta
      */
     public void setConsulta(String consulta) {
         this.consulta = consulta;
     }
 
+
     /**
      * Gets data.
      *
-     * @return the data
+     * @return a data marcada
      */
     public String getData() {
         return this.data;
@@ -152,7 +167,7 @@ public class PacienteMR {
     /**
      * Sets data.
      *
-     * @param data the data
+     * @param data a data de marcação
      */
     public void setData(String data) {
         this.data = data;

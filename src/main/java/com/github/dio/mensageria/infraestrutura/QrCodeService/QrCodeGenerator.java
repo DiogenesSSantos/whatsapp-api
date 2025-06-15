@@ -12,19 +12,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * A classe responsável para gerar o QrCode em image, aonde front-end mostra para o usuário autenticar o WhatsApp.
  * @author diogenesssantos
  *
- * A classe responsável para gerar o QrCode em image, aonde front-end mostra para o usuario authenticar o whatsapp mobile.
  */
 @Service
 public class QrCodeGenerator {
 
     /**
-     * Generate qr code image buffered image.
+     * Gera o qr code image buffered image para front-end.
      *
-     * @param text the text
-     * @return the buffered image
-     * @throws Exception the exception
+     * @param text String é recebido da {@link com.github.dio.mensageria.service.WhatsappService}
+     * @return  buffered image.
      */
     public BufferedImage generateQrCodeImage(String text) throws Exception {
         QRCodeWriter qrCodeWriter = new QRCodeWriter();

@@ -6,16 +6,18 @@ import com.github.dio.mensageria.model.Paciente;
 import org.springframework.stereotype.Component;
 
 /**
- * The type Assembler paciente.
+ * Classe responsável para conversão do objetos {@link PacienteMR} para {@link Paciente} assim permintido alteração
+ * nos modelos representacional sem impactar na classe de persistẽncia.
+ * @author diogenessantos
  */
 @Component
 public class AssemblerPaciente {
 
     /**
-     * Disassemble to object paciente.
+     * Convertemos {@link PacienteMR} para {@link Paciente}
      *
-     * @param pacienteMR the paciente mr
-     * @return the paciente
+     * @param pacienteMR entrada
+     * @return o paciente para persistencia de dados
      */
     public static Paciente disassembleToObject(PacienteMR pacienteMR) {
         var paciente = new Paciente();
@@ -30,10 +32,12 @@ public class AssemblerPaciente {
     }
 
     /**
-     * Disassemble to object nao possui whatsapp paciente.
+     * Convertemos {@link PacienteMR} para {@link Paciente}
+     * @apiNote para evitar duplicidade de código no service, foi decido casos aonde o paciente não possua o WhatsApp
+     * fazendo já a conversão e persistência dos dados fixo informando nos campos justificados.
      *
-     * @param pacienteMR the paciente mr
-     * @return the paciente
+     * @param pacienteMR entrada.
+     * @return o paciente para persistência de dados.
      */
     public static Paciente disassembleToObjectNaoPossuiWhatsapp(PacienteMR pacienteMR) {
         var paciente = new Paciente();

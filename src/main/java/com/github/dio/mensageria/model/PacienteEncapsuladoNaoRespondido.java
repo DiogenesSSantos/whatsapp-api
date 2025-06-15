@@ -5,7 +5,11 @@ import it.auties.whatsapp.model.jid.Jid;
 import java.util.Objects;
 
 /**
- * The type Paciente encapsulado nao respondido.
+ * Classe responsável encapsular o {@link Paciente} e o número de telefone em formato {@link Jid}
+ * da instancia {@link it.auties.whatsapp.api.Whatsapp}
+ * sendo a mesma uma classe Final, não mudança de estado após criação.
+ *
+ * @author diogenesssantos
  */
 public class PacienteEncapsuladoNaoRespondido  {
 
@@ -14,29 +18,31 @@ public class PacienteEncapsuladoNaoRespondido  {
 
 
     /**
-     * Instantiates a new Paciente encapsulado nao respondido.
+     * A sua inicialização única mantendo o estado final.
      *
-     * @param paciente the paciente
-     * @param numero   the numero
+     * @param paciente o paciente
+     * @param numero   o numero
      */
     public PacienteEncapsuladoNaoRespondido(Paciente paciente, Jid numero) {
         this.paciente = paciente;
         this.numero = numero;
     }
 
+
     /**
      * Gets paciente.
      *
-     * @return the paciente
+     * @return o paciente
      */
     public Paciente getPaciente() {
         return paciente;
     }
 
+
     /**
-     * Gets numero.
+     * Gets número.
      *
-     * @return the numero
+     * @return o número
      */
     public Jid getNumero() {
         return numero;
