@@ -26,12 +26,12 @@ Leia a documentação <a href="http://javadocsapiwhatsapp.devdiogenes.shop/index
 
 ## Requisitos
 
-- **Java:** Versão 21 ou superior
-- **Spring Boot:** Versão mais recente
-- **JasperReports:** Versão mais recente
-- **QrCodeGerador:** Versão masi recente da biblioteca da https://github.com/zxing/zxing
-- **Conexão com a API do WhatsApp:** Biblioteca do https://github.com/Auties00/Cobalt
-- **Banco de Dados:** Sistema de armazenamento devidamente configurado e conectado
+- **Java:** Versão 21 ou superior.
+- **Spring Boot / Spring-JPA/ Spring-Security :** Versões mais recente. 
+- **JasperReports:** Versão mais recente do <a href="https://community.jaspersoft.com/download-jaspersoft/community-edition/">JasperReports</a>.
+- **QrCodeGerador:** Versão mais recente da biblioteca do <a href="https://github.com/zxing/zxing">zxing</a>.
+- **Conexão com a API do WhatsApp:** Versão mais recente da biblioteca do <a href= "https://github.com/Auties00/Cobalt">autiesCobalt</a>.
+- **Banco de Dados:** Sistema de armazenamento devidamente configurado e conectado.
 
 ## Instalação
 
