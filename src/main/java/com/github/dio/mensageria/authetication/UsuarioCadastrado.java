@@ -31,9 +31,9 @@ public class UsuarioCadastrado {
      */
     @Bean
     public UserDetailsService userDetailsService() {
-        var user = User.builder().username("DioDev")
-                .password("{noop}Dio84768748@")
-                .roles("ADMIM")
+        var user = User.builder().username("Seu_Nome_Usuário")
+                .password("{noop}Sua_Senha")
+                .roles("ADMIM" , "USER")
                 .build();
 
         return new InMemoryUserDetailsManager(user);
