@@ -17,7 +17,7 @@ Leia a documentação <a href="http://javadocsapiwhatsapp.devdiogenes.shop/index
 ## Tecnologias Utilizadas
 
 - **Backend:** Java + spring boot
-- **Front-end:** Html,Css,JavaScript Desenvolvido por -> https://github.com/LuaMoreiraa
+- **Front-end:** Html,Css,JavaScript
 - **Banco de Dados:** MongoDB, MySQL ou outro SGBD da sua escolha
 - **Integração WhatsApp:** Biblioteca do <a href= "https://github.com/Auties00/Cobalt">autiesCobalt</a>
 - **Gerador QrCode:** Biblioteca do <a href="https://github.com/zxing/zxing">zxing</a>
